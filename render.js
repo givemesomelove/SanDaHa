@@ -1,0 +1,1 @@
+GameGlobal.canvas = wx.createCanvas();
