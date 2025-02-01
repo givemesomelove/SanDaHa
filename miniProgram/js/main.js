@@ -1,7 +1,5 @@
-import './render'; // 初始化Canvas
 import Music from './runtime/music'; // 导入音乐类
 import DataBus from './databus'; // 导入数据类，用于管理游戏状态和数据
-import Pool from './base/pool';
 import {
     Screen_Height,
     Screen_Width
@@ -12,10 +10,8 @@ import SceneBottomAColor from './scene/sceneBottomAndColor';
 import ScenePickCard from './scene/scenePickCard';
 import ScenePickWin from './scene/sceneSelectWin';
 import SceneEnd from './scene/sceneEnd';
+import Prepare from './prepare';
 
-const ENEMY_GENERATE_INTERVAL = 30;
-const ctx = canvas.getContext('2d'); // 获取canvas的2D绘图上下文;
-GameGlobal.pool = new Pool();
 /**
  * 游戏主函数
  */
@@ -29,6 +25,8 @@ export default class Main {
     sceneEnd = new SceneEnd();
 
     constructor() {
+        this.prepare = new Prepare()
+
         GameGlobal.databus = new DataBus(); // 全局数据管理，用于管理游戏状态和数据
         this.update = this.update.bind(this);
         GameGlobal.databus.updateBlock = this.update;

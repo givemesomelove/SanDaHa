@@ -1,6 +1,8 @@
 import Main from './js/main';
 
-wx.cloud.init({ env: 'lzh-5gscknm9451fffc2' });
+wx.cloud.init({ env: wx.cloud.dynamicCurrentEnv });
+const db = wx.cloud.database();
+
 
 // 读取卡牌列表
 const fs = wx.getFileSystemManager();
@@ -25,7 +27,6 @@ fs.readFile({
 })
 
 // 读取用户表
-const db = wx.cloud.database();
 db.collection('user').get().then(res => {
     console.log("用户表读取成功:", res.data);
     GameGlobal.allPlayers = res.data;

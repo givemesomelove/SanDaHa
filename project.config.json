@@ -25,6 +25,8 @@
         "tabIndent": "insertSpaces",
         "tabSize": 4
     },
+    "miniprogramRoot": "miniprogram/",
     "cloudfunctionRoot": "cloudfunctions/",
-    "cloudfunctionTemplateRoot": "cloudfunctionTemplate/"
+    "cloudfunctionTemplateRoot": "cloudfunctionTemplate/",
+    "srcMiniprogramRoot": "miniprogram/"
 }
