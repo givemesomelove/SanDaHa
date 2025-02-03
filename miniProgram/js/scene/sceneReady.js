@@ -2,6 +2,8 @@
     准备阶段的场景
 */
 
+import { Btn_Height, Btn_Width } from "../common/Defines";
+import { clickItems, GameStep, getLocalUserId, getUserOnline, makeImage, playerName, playerNames, randomPlayers, removeItems, renderItems, showLoading, userIdByName } from "../common/util";
 import {
 	cloud_createRoom,
 	cloud_deleteGame,
@@ -10,174 +12,62 @@ import {
 	cloud_login,
 	cloud_outRoom,
 	cloud_startGame
-} from "../cloudFunc";
-import {
-	createBtn
-} from "../common/btn";
-import {
-	clickItems,
-	cloudFunc,
-	GameStep,
-	renderItems, 
-	cleanItems,
-	Stamp2DateString,
-	playerNames,
-	playerName,
-	getOnlinePlayers,
-	getLocalUserName,
-	showLoading,
-	tipToast,
-	randomPlayers,
-	makeImg
-} from "../util";
+} from "../control/cloudFunc";
+import { createBtn } from "../View/btn";
 
-import Scene from "../common/scene"
-import { Btn_Height, Btn_Width, MenuBottom, Screen_Height, Screen_Width } from "../Defines";
+import Scene from "./scene"
 
 export default class SceneReady extends Scene {
 	constructor() {
 		super()
-		this.bgImage = makeImg("sceneBg_2")
+		this.bgImage = makeImage("sceneBg_2")
 		this.sceneStep = GameStep.Ready
 	}
 
-	initNamesBtn() {
-		let titles = ["我是谭别", "我是西瓜别", "我是鸟别", "我是徐别", "我是虎别"]	
+	initLoginBtn() {
+		let names = ["谭别", "西瓜别", "鸟别", "徐别", "虎别"]
 
-		const blocks = [
-			() => {
-				this.handleOfLogin("谭别")
-			},
-			() => {
-				this.handleOfLogin("西瓜别")
-			},
-			() => {
-				this.handleOfLogin("鸟别")
-			},
-			() => {
-				this.handleOfLogin("徐别")
-			},
-			() => {
-				this.handleOfLogin("虎别")
-			},
-		]
+		const blocks = []
+		for (let i = 0; i < names.length; i ++) {
+			const userId = userIdByName(names[i])
+			blocks[i] = () => this.handleOfLogin(userId)
+		}
+
 		let btns = []
-		const sideCount = Math.floor(titles.length / 2);
-		const centerX = Screen_Width / 2
-		const leftX = centerX - Btn_Width / 2
-		const startY = Screen_Height / 2 - Btn_Height / 2 - sideCount * Btn_Height
-		for (let i = 0; i < titles.length; i++) {
-			const btn = createBtn(leftX, startY + i * Btn_Height, titles[i], blocks[i])
+		const sideCount = Math.floor(names.length / 2);
+		const x = this.width / 2 - Btn_Width / 2
+		const y = this.height / 2 - Btn_Height / 2 - sideCount * Btn_Height
+		for (let i = 0; i < names.length; i++) {
+			const btn = createBtn(x, y + i * Btn_Height, names[i], blocks[i])
 			btns.push(btn)
 		}
 		return btns
 	}
 
+	// 登录
+	handleOfLogin(userId) {
+		showLoading(1)
+		GameGlobal.databus.updateLogin(userId)
+	}
+
+	// 准备按钮(普通)
 	initRoomBtns() {
-		const userIds = GameGlobal.databus.roomPlayers
-		
-		let titles = ["加入房间"]	
+		const userId = GameGlobal.databus.userId
+		const online = getUserOnline(userId)
 
-		const blocks = [
-			() => {
-				this.handleOfLogin("谭别")
-			},
-			() => {
-				this.handleOfLogin("西瓜别")
-			},
-			() => {
-				this.handleOfLogin("鸟别")
-			},
-			() => {
-				this.handleOfLogin("徐别")
-			},
-			() => {
-				this.handleOfLogin("虎别")
-			},
-		]
-		let btns = []
-		const sideCount = Math.floor(titles.length / 2);
-		const centerX = Screen_Width / 2
-		const leftX = centerX - Btn_Width / 2
-		const startY = Screen_Height / 2 - Btn_Height / 2 - sideCount * Btn_Height
-		for (let i = 0; i < titles.length; i++) {
-			const btn = createBtn(leftX, startY + i * Btn_Height, titles[i], blocks[i])
-			btns.push(btn)
+		const x = this.width / 2 - Btn_Width / 2
+		const y = this.height / 2 - Btn_Height / 2
+		if (online) {
+			const btn = createBtn(x, y, "取消准备",this.handleOfOutRoom.bind(this))
+			return [btn]
+		} else {
+			const btn = createBtn(x, y, "准备",this.handleOfJoinRoom.bind(this))
+			return [btn]
 		}
-		return btns
 	}
 
-	initLeftBtns() {
-		let titles = ["我是谭别", "我是西瓜别", "我是鸟别", "我是徐别", "我是虎别"]
-		const localName = getLocalUserName()
-		let unClicks = [false, false, false, false, false]
-		if (localName) {
-			titles = ["谭别", "西瓜别", "鸟别", "徐别", "虎别"]
-			const myIndex = titles.indexOf(localName)
-			unClicks = [true, true, true, true, true]
-			unClicks[myIndex] = false
-			titles[myIndex] = GameGlobal.databus.userId ? "我" : "点击登录"
-		}
-
-		const blocks = [
-			() => {
-				this.handleOfLogin("谭别")
-			},
-			() => {
-				this.handleOfLogin("西瓜别")
-			},
-			() => {
-				this.handleOfLogin("鸟别")
-			},
-			() => {
-				this.handleOfLogin("徐别")
-			},
-			() => {
-				this.handleOfLogin("虎别")
-			},
-		]
-		let btns = []
-		const onlines = getOnlinePlayers()
-		const sideCount = Math.floor(titles.length / 2);
-		const centerX = Screen_Width / 2
-		const leftX = centerX - Btn_Width - 10
-		const startY = Screen_Height / 2 - Btn_Height / 2 - sideCount * Btn_Height
-		for (let i = 0; i < titles.length; i++) {
-			const btn = createBtn(leftX, startY + i * Btn_Height, titles[i], blocks[i])
-			btn.online = onlines[i]
-			btn.unClickable = unClicks[i]
-			btns.push(btn)
-		}
-		return btns
-	}
-
-	initRightBtns() {
-		// 管理员会走另外的通道
-		const localName = getLocalUserName()
-		if (!localName || localName == "虎别") {
-			return this.initGMRightBtns()
-		}
-
-		// 普通玩家
-		let isInRoom = false 
-		if (GameGlobal.databus.roomPlayers && GameGlobal.databus.userId) {
-			const playerIds = GameGlobal.databus.roomPlayers
-			const playerId = GameGlobal.databus.userId
-			if (playerIds.includes(playerId)) {
-				isInRoom = true
-			}
-		}
-		const title = isInRoom ? "已准备" : "点击准备"
-		const block = isInRoom ? this.handleOfOutRoom.bind(this) : this.handleOfJoinRoom.bind(this)
-
-		const centerX = Screen_Width / 2
-		const leftX = centerX + 10
-		const y = Screen_Height / 2 - Btn_Height / 2
-		const btn = createBtn(leftX, y, title, block)
-		return [btn]
-	}
-
-	initGMRightBtns() {
+	// 准备按钮(管理员)
+	initGMBtns() {
 		const titles = ["创建房间", "加入房间", "删除房间", "开始游戏", "删除游戏"]
 		const blocks = []
 		blocks[0] = this.handleOfCreatRoom.bind(this)
@@ -188,26 +78,13 @@ export default class SceneReady extends Scene {
 
 		let btns = []
 		const sideCount = Math.floor(titles.length / 2);
-		const centerX = Screen_Width / 2
-		const leftX = centerX + 10
-		const startY = Screen_Height / 2 - Btn_Height / 2 - sideCount * Btn_Height
+		const x = this.width / 2 - Btn_Width / 2
+		const y = this.height / 2 - Btn_Height / 2 - sideCount * Btn_Height
 		for (let i = 0; i < titles.length; i++) {
-			const btn = createBtn(leftX, startY + i * Btn_Height, titles[i], blocks[i])
+			const btn = createBtn(x, y + i * Btn_Height, titles[i], blocks[i])
 			btns.push(btn)
 		}
 		return btns
-	}
-
-	// 登录
-	handleOfLogin(name) {
-		showLoading(1)
-		// 缓存用户名
-		wx.setStorage({
-			key: "userName",
-			data: name
-		})
-		// 登陆
-		cloud_login(name)
 	}
 
 	// 创建房间
@@ -263,33 +140,57 @@ export default class SceneReady extends Scene {
 
 	// 重写这个方法更新数据
 	updateScene() {
-		cleanItems(this.leftBtns)
-		cleanItems(this.rightBtns)
-		if (this.needUpdate) {
-			this.leftBtns = this.initLeftBtns()
-			this.rightBtns = this.initRightBtns()
-		} else {
-			this.leftBtns = null
-			this.rightBtns = null
+		removeItems(this.btns)
+		this.btns = []
+		if (!this.needUpdate) return
+
+		const userId = GameGlobal.databus.userId
+		// 是否登陆过
+		const localId = getLocalUserId()
+		const everLogin = localId ? true : false
+		// 是否已登录
+		const isLogin = userId ? true : false
+		// 是否是管理员
+		const isGM = isLogin && playerName(userId) == "虎别"
+
+		if (!everLogin) {
+			// 没有登陆过
+			this.btns = this.initLoginBtn()
+		} else if (!isLogin) {
+			// 当前没有登陆，就直接登陆
+			this.handleOfLogin(localId)
+		} else if (everLogin && isLogin && !isGM) {
+			this.btns = this.initRoomBtns()
+		} else if (everLogin && isLogin && isGM) {
+			this.btns = this.initGMBtns()
 		}
+		console.log(this.btns)
 	}
 
 	renderScene(ctx) {
-		renderItems(this.leftBtns, ctx)
-		renderItems(this.rightBtns, ctx)
+		renderItems(this.btns, ctx)
 	}
 
 	handleOfSceneClick(x, y) {
-		clickItems(this.leftBtns, x, y)
-		clickItems(this.rightBtns, x, y)
+		clickItems(this.btns, x, y)
 	}
 
 	// 重写这个方法，来显示状态信息
 	getTipStrs() {
-		let text4 = "当前无游戏"
-		if (GameGlobal.databus && GameGlobal.databus.gameInfo) {
-			text4 = "当前有游戏"
+		let texts = []
+		if (GameGlobal.databus.roomStamp && GameGlobal.databus.roomPlayers) {
+			texts.push("当前有房间")
+			const names = playerNames(GameGlobal.databus.roomPlayers)
+			texts.push("在线:" + names)
+		} else {
+			texts.push("当前无房间")
 		}
-		return [text4]
+
+		if (GameGlobal.databus.gameInfo) {
+			texts.push("当前有游戏")
+		} else {
+			texts.push("当前无游戏")
+		}
+		return texts
 	}
 }

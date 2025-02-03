@@ -2,41 +2,27 @@
 	场景的基类
 */
 
-import {
-	Screen_Height,
-	Screen_Width,
-	Scene_Start_Bg_Icon,
-	MenuTop,
-	Scene_Ready_Bg_Icon,
-	MenuBottom
-} from "../Defines";
-import {
-	GameStep,
-	getCurStep,
-	isFocuseMy,
-  makeImg
-} from "../util";
-import {
-	createLab,
-	createLabs
-} from "./lab";
+import { menuFrame } from "../common/Defines"
+import { isEnemyMy, isFocuseMy, makeImage, getCurStep } from "../common/util"
+import { createLab, createLabs } from "../View/lab"
 
 export default class Scene {
 	constructor() {
 		this.sceneStep = null
 		this.gameStep = null
-		this.bgImage = makeImg("sceneBg_1")
+		this.bgImage = makeImage("sceneBg_1")
 
 		this.x = 0
 		this.y = 0
-		this.width = Screen_Width
-		this.height = Screen_Height
+		this.width = GameGlobal.canvas.width
+		this.height = GameGlobal.canvas.height
 
-		this.tipLabs = createLabs(0, MenuTop, [""], 'black')
+		this.tipLabs = createLabs(0, menuFrame.bottom, [""], 'black')
 		this.handleOfClickScene = this.handleOfClick.bind(this)
-		this.focuse = false
+		this.isFocuse = false
+		this.isEnemy = false
 
-		this.stepLab = createLab(Screen_Width / 2, (MenuTop + MenuBottom) / 2, "", 'black')
+		this.stepLab = createLab(this.width / 2, (menuFrame.top + menuFrame.bottom) / 2, "", 'black')
 	}
 
 	// 点击事件接收
@@ -62,15 +48,17 @@ export default class Scene {
 
 	// 只有当前场景，或者从当前场景切换至其他场景需要updateScene
 	update() {
-		this.focuse = isFocuseMy()
-		const gameStep = getCurStep()
+		this.isFocuse = isFocuseMy()
+		this.isEnemy = isEnemyMy()
+		const gameStep = 
+		getCurStep()
 		if (gameStep == this.sceneStep ||
 			(gameStep != this.gameStep && this.gameStep == this.sceneStep)) {
 			this.gameStep = gameStep
 			this.needUpdate = gameStep == this.sceneStep
 			this.updateScene()
 		} else {
-			this.gameStep == gameStep
+			this.gameStep = gameStep
 		}
 
 		if (gameStep == this.sceneStep) {

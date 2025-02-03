@@ -1,3 +1,4 @@
+const { getUserKeyBySeat, Seat } = require("../common/util");
 
 // 调用云函数
 const cloudFunc = ({
@@ -135,7 +136,7 @@ exports.cloud_bottomAColor = (color, bottomCardIds) => {
 	const data = {
 		"type" : 5,
 		"cards" : bottomCardIds,
-		"userKey" : GameGlobal.databus.userKey,
+		"userKey" : getUserKeyBySeat(Seat.Down),
 		"color" : color
 	}
 	cloudFunc({

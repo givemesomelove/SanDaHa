@@ -1,18 +1,64 @@
+export const GameStep = Object.freeze({
+  Ready: '准备',
+  CallScore: '叫分中',
+  SelecBottomAndColor: '庄家埋底选主',
+  PickCard: '出牌中',
+  SelectWinner: '本轮谁赢',
+  End: '游戏结束'
+});
+
+export const Seat = Object.freeze({
+  Up: 'Up',
+  Down: 'Down',
+  Left: 'Left',
+  Right: 'Right',
+});
+
+// 根据方位获取用户id
+export const getUserId = seat => {
+  const gameInfo = GameGlobal.databus.gameInfo
+  const curUserId = GameGlobal.databus.userId
+  let index = gameInfo.turnPlayers.indexOf(curUserId)
+  if (seat == Seat.Left) {
+    index += 1
+  } else if (seat == Seat.Up) {
+    index += 2
+  } else if (seat == Seat.Right) {
+    index += 3
+  }
+  index %= 4
+  return gameInfo.turnPlayers[index]
+}
+
+// 根据用户id获取用户key
+export const getUserKey = userId => {
+  if (!GameGlobal.databus.gameInfo) return null
+
+  const players = GameGlobal.databus.gameInfo.turnPlayers
+  const index = players.indexOf(userId)
+  return `player${index + 1}Info`
+}
+
+// 根据用户方位获取用户key
+export const getUserKeyBySeat = seat => {
+  const userId = getUserId(seat)
+  const userKey = getUserKey(userId)
+  return userKey
+}
+
 // 拼接图片地址
-const imgPath = name => {
+export const imgPath = name => {
   return "images/" + name + ".png";
 }
-exports.imgPath = imgPath
 
-const makeImage = name => {
+export const makeImage = name => {
   let img = wx.createImage()
   img.src = imgPath(name)
   return img
 }
-exports.makeImg = makeImage
 
-const headImg = userKey => {
-  const userId = GameGlobal.databus.gameInfo[userKey].playerId
+export const headImage = seat => {
+  const userId = getUserId(seat)
   const name = playerName(userId)
   let imageName = ""
   if (name == "谭别") {
@@ -28,17 +74,9 @@ const headImg = userKey => {
   }
   return makeImage(imageName)
 }
-exports.getHeadImg = headImg
-
-const {
-  Screen_Width,
-  Screen_Height,
-  Btn_Height,
-  Btn_Width
-} = require("./Defines");
 
 // 防抖，直到0.8秒后执行
-exports.debounce = func => {
+export const debounce = func => {
   let timeout;
   return function (...args) {
     const context = this;
@@ -48,7 +86,7 @@ exports.debounce = func => {
 };
 
 // 防抖，0.8秒内不重复执行
-exports.debounceImmediate = func => {
+export const debounceImmediate = func => {
   let timeout;
   let firstRun = true; // 标记是否是第一次运行
   return function (...args) {
@@ -70,20 +108,19 @@ exports.debounceImmediate = func => {
 };
 
 // 根据用户id获取用户名字
-const playerName = userId => {
+export const playerName = userId => {
   if (!GameGlobal.allPlayers) return "未知";
 
   for (const player of GameGlobal.allPlayers) {
-    if (player["_id"] == userId) {
-      return player["name"]
+    if (player._id == userId) {
+      return player.name
     }
   }
   return "未知";
 }
-exports.playerName = playerName
 
 // 根据用户id列表获取用户名字列表
-exports.playerNames = userIds => {
+export const playerNames = userIds => {
   if (!userIds) return "无";
   if (!GameGlobal.allPlayers) return "未知";
 
@@ -98,8 +135,20 @@ exports.playerNames = userIds => {
   return players.slice(0, -1);
 }
 
+// 根据用户id获取用户名字
+export const userIdByName = name => {
+  if (!GameGlobal.allPlayers) return null;
+
+  for (const player of GameGlobal.allPlayers) {
+    if (player.name == name) {
+      return player._id
+    }
+  }
+  return null;
+}
+
 // 时间戳转成字符串
-exports.Stamp2DateString = stamp => {
+export const Stamp2DateString = stamp => {
   if (!stamp) {
     return "无";
   }
@@ -122,17 +171,7 @@ exports.Stamp2DateString = stamp => {
   return `${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-const GameStep = Object.freeze({
-  Ready: '准备',
-  CallScore: '叫分中',
-  SelecBottomAndColor: '庄家埋底选主',
-  PickCard: '出牌中',
-  SelectWinner: '本轮谁赢',
-  End: '游戏结束'
-});
-exports.GameStep = GameStep;
-
-exports.getCurStep = () => {
+export const getCurStep = () => {
   const gameInfo = GameGlobal.databus.gameInfo
   const userId = GameGlobal.databus.userId
   if (!gameInfo || !userId) {
@@ -151,28 +190,8 @@ exports.getCurStep = () => {
   return GameStep.Ready
 }
 
-// 下一位
-exports.nextPlayer = (players, player) => {
-  const index = players.indexOf(player);
-  if (index === players.length - 1) {
-    return players[0];
-  }
-  return players[index + 1];
-}
-
-const getMainColor = () => {
-  let mainColor = 0
-  if (GameGlobal.databus &&
-    GameGlobal.databus.gameInfo &&
-    GameGlobal.databus.gameInfo["mainColor"] != 0) {
-    mainColor = GameGlobal.databus.gameInfo["mainColor"]
-  }
-  return mainColor
-}
-exports.getMainColor = getMainColor
-
 // 手牌按颜色分堆
-exports.cardSplits = (cards) => {
+export const cardSplits = (cards) => {
   const ranks = GameGlobal.databus.ranks
 
   let tmpCards = [
@@ -205,63 +224,14 @@ exports.cardSplits = (cards) => {
   return res;
 }
 
-exports.getRanks = () => {
-  // 获取主色
-  const mainColor = getMainColor()
-  const isDefault = mainColor == 0 || mainColor == 5 || mainColor == 1
-  // 大小王
-  let ranks = [54, 53]
-  // 四个七
-  let card7s = [7, 20, 33, 46]
-  if (!isDefault) {
-    const value = card7s.splice(mainColor - 1, 1)[0];
-    card7s.unshift(value);
-  }
-  ranks = ranks.concat(card7s)
-  // 四个2
-  let card2s = [2, 15, 28, 41]
-  if (!isDefault) {
-    const value = card2s.splice(mainColor - 1, 1)[0];
-    card2s.unshift(value);
-  }
-  ranks = ranks.concat(card2s)
-  // 红桃\黑桃\梅花\梅花
-  const cardHearts = [1, 13, 12, 11, 10, 9, 8, 5]
-  const cardSpades = [14, 26, 25, 24, 23, 22, 21, 18]
-  const cardClubs = [27, 39, 38, 37, 36, 35, 34, 31]
-  const cardDiamonds = [40, 52, 51, 50, 49, 48, 47, 44];
-  if (isDefault) {
-    ranks = ranks.concat(cardHearts)
-    ranks = ranks.concat(cardSpades)
-    ranks = ranks.concat(cardClubs)
-    ranks = ranks.concat(cardDiamonds)
-  } else if (mainColor == 2) {
-    ranks = ranks.concat(cardSpades)
-    ranks = ranks.concat(cardHearts)
-    ranks = ranks.concat(cardClubs)
-    ranks = ranks.concat(cardDiamonds)
-  } else if (mainColor == 3) {
-    ranks = ranks.concat(cardClubs)
-    ranks = ranks.concat(cardHearts)
-    ranks = ranks.concat(cardSpades)
-    ranks = ranks.concat(cardDiamonds)
-  } else if (mainColor == 4) {
-    ranks = ranks.concat(cardDiamonds)
-    ranks = ranks.concat(cardHearts)
-    ranks = ranks.concat(cardSpades)
-    ranks = ranks.concat(cardClubs)
-  }
-  return ranks
-}
-
 // 给卡牌排序
-exports.cardRanks = (cards) => {
+export const cardRanks = cardIds => {
   const ranks = GameGlobal.databus.ranks
   // 排序开始
-  let results = cards.slice();
-  results.sort((card1, card2) => {
-    let index1 = ranks.indexOf(card1);
-    let index2 = ranks.indexOf(card2);
+  let results = cardIds.slice();
+  results.sort((cardId1, cardId2) => {
+    let index1 = ranks.indexOf(cardId1);
+    let index2 = ranks.indexOf(cardId2);
     if (index1 < index2) {
       return -1;
     } else if (index1 > index2) {
@@ -273,25 +243,8 @@ exports.cardRanks = (cards) => {
   return results
 }
 
-// 将牌的位置安排好
-exports.orderLineCard = (cards, x, y, width) => {
-  if (!cards) {
-    return
-  }
-
-  // 根据宽度width平均分
-  let itemWidth = width / cards.length
-  itemWidth = Math.min(itemWidth, 36)
-  for (let i = 0; i < cards.length; i++) {
-    let card = cards[i]
-    card.x = x + i * card.width / 2
-    card.y = y
-    card.configLine(x + i * itemWidth, y, itemWidth)
-  }
-}
-
 // 卡牌列表是否相同
-exports.isCardsUpdate = (cardIds1, cardIds2) => {
+export const isCardsUpdate = (cardIds1, cardIds2) => {
   if (!cardIds1 && !cardIds2) return false
   if (!cardIds1 && cardIds2) return true
   if (cardIds1 && !cardIds2) return true
@@ -306,47 +259,56 @@ exports.isCardsUpdate = (cardIds1, cardIds2) => {
 }
 
 // 回收整个数组的复用池(元素必须要有remove方法)
-exports.cleanItems = items => {
+export const removeItems = items => {
   if (!items || items.length == 0) return
 
   items.forEach(item => {
-    if (item) item.remove()
+    item && item.remove()
   })
 }
 
 // 渲染整个数组的元素（元素必须要有render方法）
-exports.renderItems = (items, ctx) => {
+export const renderItems = (items, ctx) => {
   if (!items || items.length == 0) return
 
   items.forEach(item => {
-    if (item) item.render(ctx)
+    item && item.render(ctx)
   })
 }
 
-// 画场景的背景图
-exports.drawBg = (ctx, image) => {
-  ctx.drawImage(image, 0, 0, Screen_Width, Screen_Height);
-}
-
-exports.clickItems = (items, x, y) => {
+export const clickItems = (items, x, y) => {
   if (!items || items.length == 0) return
 
   items.forEach(item => {
-    if (item) item.handleOfClick(x, y)
+    item && item.handleOfClick(x, y)
+  })
+}
+
+export const updateItems = items => {
+  if (!items || items.length == 0) return
+
+  items.forEach(item => {
+    item && item.update()
   })
 }
 
 // 是当前玩家操作吗
-exports.isFocuseMy = () => {
-  if (!GameGlobal.databus ||
-    !GameGlobal.databus.userId ||
-    !GameGlobal.databus.gameInfo) return false
+export const isFocuseMy = () => {
+  if (!GameGlobal.databus.gameInfo ||
+    !GameGlobal.databus.userId) return false
 
   return GameGlobal.databus.gameInfo.focusPlayer == GameGlobal.databus.userId
 }
 
+export const isEnemyMy = () => {
+  if (!GameGlobal.databus.gameInfo ||
+    !GameGlobal.databus.userId) return false
+
+  return GameGlobal.databus.gameInfo.enemyPlayer == GameGlobal.databus.userId
+}
+
 // 获取主色编号对应字符串
-exports.colorName = (color) => {
+export const colorName = (color) => {
   switch (color) {
     case 1:
       return "红桃"
@@ -360,41 +322,64 @@ exports.colorName = (color) => {
   return ""
 }
 
-// 获取当前在线玩家列表
-exports.getOnlinePlayers = () => {
-  const onlines = [false, false, false, false, false]
-  if (!GameGlobal.databus || !GameGlobal.databus.roomPlayers) return onlines
+// 获取当前在线玩家状态
+export const getUserOnline = userId => {
+  const roomPlayers = GameGlobal.databus.roomPlayers
+  if (!roomPlayers) return false
 
-  const playerIds = GameGlobal.databus.roomPlayers
-  for (const playerId of playerIds) {
-    const name = playerName(playerId)
-    if (name == "谭别") {
-      onlines[0] = true
-    } else if (name == "西瓜别") {
-      onlines[1] = true
-    } else if (name == "鸟别") {
-      onlines[2] = true
-    } else if (name == "徐别") {
-      onlines[3] = true
-    } else if (name == "虎别") {
-      onlines[4] = true
-    }
-  }
-  return onlines
+  return roomPlayers.includes(userId)
 }
 
-exports.getLocalUserName = () => {
+// 获取本地缓存的用户名
+export const getLocalUserId = () => {
   // return null
   try {
-    const name = wx.getStorageSync('userName')
-    return name
+    const userId = wx.getStorageSync('userId')
+    return userId
   } catch (e) {
     return null
   }
 }
 
+// 展示loading
+export const showLoading = seconds => {
+  wx.showLoading({
+    title: '加载中',
+  })
+  setTimeout(function () {
+    wx.hideLoading()
+  }, seconds * 1000)
+}
+
+// 展示toast
+export const tipToast = (text) => {
+  wx.showToast({
+    title: text,
+    icon: 'error',
+    mask: true
+  })
+}
+
+// 打乱玩家座位
+export const randomPlayers = (array) => {
+  const newArray = [...array]; // 创建副本
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+}
+
+// 点是否在Rect中
+export const isPointInFrame = (curX, curY, x, y, width, height) => {
+  return (curX > x &&
+    curX < x + width &&
+    curY > y &&
+    curY < y + height)
+}
+
 // 绘制圆角矩形
-const drawRoundedRect = (ctx, x, y, width, height, radius, fillColor) => {
+export const drawRoundRect = (ctx, x, y, width, height, radius, fillColor) => {
   ctx.beginPath();
   // 绘制圆角路径
   ctx.moveTo(x + radius, y);
@@ -407,10 +392,9 @@ const drawRoundedRect = (ctx, x, y, width, height, radius, fillColor) => {
   ctx.fillStyle = fillColor;
   ctx.fill();
 }
-exports.drawRoundedRect = drawRoundedRect
 
 // 绘制不可点击按钮
-exports.drawBtnRoundRect = (ctx, x, y) => {
+export const drawBtnRoundRect = (ctx, x, y) => {
   const height = (Btn_Height - 35)
   const width = (Btn_Width - 25)
   const fixX = x - width / 2
@@ -419,7 +403,7 @@ exports.drawBtnRoundRect = (ctx, x, y) => {
 }
 
 // 绘制红色边框
-exports.drawRoundedRectBorder = (ctx, x, y, width, height, radius, borderColor) => {
+export const drawRoundedRectBorder = (ctx, x, y, width, height, radius, borderColor) => {
   ctx.beginPath();
   // 绘制圆角路径
   ctx.moveTo(x + radius, y);
@@ -435,56 +419,3 @@ exports.drawRoundedRectBorder = (ctx, x, y, width, height, radius, borderColor) 
   // 绘制边框
   ctx.stroke();
 }
-
-exports.showLoading = seconds => {
-  wx.showLoading({
-    title: '加载中',
-  })
-  setTimeout(function () {
-    wx.hideLoading()
-  }, seconds * 1000)
-}
-
-exports.tipToast = (text) => {
-  wx.showToast({
-    title: text,
-    icon: 'error',
-    mask: true
-  })
-}
-
-exports.randomPlayers = (array) => {
-  const newArray = [...array]; // 创建副本
-  for (let i = newArray.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-  }
-  return newArray;
-}
-
-exports.isPointInFrame = (curX, curY, x, y, width, height) => {
-  return (curX > x &&
-    curX < x + width &&
-    curY > y &&
-    curY < y + height)
-}
-
-exports.getUserKeyByUserId = userId => {
-  if (!GameGlobal.databus ||
-    !GameGlobal.databus.gameInfo) return null
-  if (userId == GameGlobal.databus.gameInfo.player1Info.playerId) {
-    return "player1Info"
-  } else if (userId == GameGlobal.databus.gameInfo.player2Info.playerId) {
-    return "player2Info"
-  } else if (userId == GameGlobal.databus.gameInfo.player3Info.playerId) {
-    return "player3Info"
-  } else if (userId == GameGlobal.databus.gameInfo.player4Info.playerId) {
-    return "player4Info"
-  }
-  return null
-}
-
-exports.isCardInfoGetted = () => {
-    return GameGlobal.cardList ? true : false
-}
-

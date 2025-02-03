@@ -141,10 +141,10 @@ const select_bottomAndColor = async (cards, userKey, color) => {
 // 下一位
 const nextPlayer = (players, player) => {
     const index = players.indexOf(player);
-    if (index === players.length - 1) {
-        return players[0];
+    if (index === 0) {
+        return players[players.length - 1];
     }
-    return players[index + 1];
+    return players[index - 1];
 }
 
 // 出牌

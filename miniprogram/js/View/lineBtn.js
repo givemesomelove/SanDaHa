@@ -2,9 +2,13 @@
 	一行五个窄按钮
 */
 
-import { createMiniBtn } from "../common/btn";
-import { Btn_M_Height, Btn_M_Wdith, Screen_Width } from "../Defines";
-import { cleanItems, clickItems, renderItems } from "../util";
+import { createMiniBtn } from "./btn";
+import { GameStep, removeItems } from "../common/util";
+import { Btn_M_Height, Btn_M_Wdith } from "../common/Defines";
+import { clickItems, renderItems } from "../common/util";
+
+const Screen_Width = GameGlobal.canvas.width
+const Screen_Height = GameGlobal.canvas.height
 
 export default class LineBtn {
 	constructor() {
@@ -61,7 +65,7 @@ export default class LineBtn {
 	}
 
 	remove() {
-		cleanItems(this.btns)
+		removeItems(this.btns)
 		GameGlobal.pool.recover('lineBtn', this)
 	}
 

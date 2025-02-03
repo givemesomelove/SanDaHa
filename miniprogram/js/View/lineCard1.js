@@ -2,9 +2,12 @@
     一行卡牌的展示
 */
 
-import { createCard } from "../common/card"
-import { Card_Width, HeadHeight, Screen_Width } from "../Defines"
-import { cleanItems, clickItems, isCardInfoGetted, renderItems } from "../util"
+import { createCard } from "./card"
+import { Card_Width } from "../common/Defines"
+import { clickItems, removeItems, renderItems } from "../common/util"
+
+const Screen_Width = GameGlobal.canvas.width
+const Screen_Height = GameGlobal.canvas.height
 
 export default class SectionCard {
     constructor(direction, spacing, y, clickBlock) {
@@ -15,8 +18,7 @@ export default class SectionCard {
     }
 
     update(cardIds) {
-        if (!isCardInfoGetted()) return
-        cleanItems(this.cards)
+        removeItems(this.cards)
         this.cards = []
 
         let cardWidth = Card_Width
@@ -72,7 +74,7 @@ export default class SectionCard {
     }
 
     remove() {
-        cleanItems(this.cards)
+        removeItems(this.cards)
     }
 
 }

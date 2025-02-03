@@ -2,15 +2,16 @@
     卡牌的基类
 */
 
-import { Card_Height, Card_Width, Card_Select_Width, Select_Icon } from "../Defines"
-import { makeImg } from "../util"
+import { cardImage, isPointInFrame, makeImage } from "../common/util"
+import { Card_Height, Card_Width, Card_Select_Width, Select_Icon } from "../common/Defines"
+import { makeImg } from "../common/util"
 
 export default class Card {
     constructor() {
         this.image = null
         this.width = Card_Width
         this.height = Card_Height
-        this.selectImage = makeImg("select")
+        this.selectImage = makeImage("select")
         this.clickableWidth = Card_Width
 
         this.clickBlock = null 
@@ -29,7 +30,7 @@ export default class Card {
         this.cardId = cardId
         const card = cardList.find(card => card["id"] == cardId)
         if (!card) return
-        this.image = card["imv"]
+        this.image = GameGlobal.imgs[card.img]
         this.clickBlock = clickBlock
         
         this.select = false
@@ -55,10 +56,7 @@ export default class Card {
 
     // 是否被点击了
     isClicked(x, y) {
-        return x > this.x &&
-            x < this.x + this.clickableWidth &&
-            y > this.y &&
-            y < this.y + this.height
+        return isPointInFrame(x, y, this.x, this.y, this.clickableWidth, this.height)
     }
 
     // 点击事件处理

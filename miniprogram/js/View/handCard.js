@@ -2,26 +2,23 @@
     手牌展示，
 */
 
-import { Card_Height, Screen_Height, Screen_Width } from "../Defines"
-import { cardSplits, cleanItems, clickItems } from "../util"
-import { createLineCard } from "./lineCard"
+import { Card_Height, HandCard_Top } from "../common/Defines"
+import { cardSplits, clickItems, removeItems } from "../common/util"
+import SectionCard from "./lineCard1"
 
 export default class HandCard {
     constructor(selectBlock) {
         this.x = 16
-        this.bottom = 34
         this.lineCards = null
-        this.y = Screen_Height / 2
         this.selectBlock = selectBlock
     }
 
     handleOfClickhandCard() {
-        const status = this.getCardStatus()
-		const clickIndex = status.indexOf(true)
-		if (clickIndex == -1) return
+        const cardIds = this.getSelectCardIds()
+		if (!cardIds || cardIds.length == 0) return
 
         if (this.selectBlock) {
-            this.selectBlock(clickIndex)
+            this.selectBlock(cardIds)
         }
     }
 
@@ -30,22 +27,19 @@ export default class HandCard {
     }
 
     update(handCardIds) {
-        const cardList = GameGlobal.cardList
-        if (!cardList) return
-
-        cleanItems(this.lineCards)
+        removeItems(this.lineCards)
         this.lineCards = []
 
         if (!handCardIds || handCardIds.lenght <= 0) return
 
         const lines = cardSplits(handCardIds)
         const count = lines.length
-        let spacing = this.x
-        let startY = Screen_Height - this.bottom - count * (Card_Height + 5) + 5
-        this.y = startY
+        const x = this.x
+        const startY = HandCard_Top()
         for (let i = 0; i < count; i ++) {
-            const y = startY + i * (Card_Height + 5)
-            let lineCard = createLineCard(spacing, y, Screen_Width - this.x * 2, lines[i], this.handleOfClickhandCard.bind(this))
+            const y = startY + (i + 5 - count) * (Card_Height + 5)
+            const lineCard = new SectionCard('left', x, y, this.handleOfClickhandCard.bind(this))
+            lineCard.update(lines[i])
             this.lineCards.push(lineCard)
         }
     }
@@ -86,6 +80,6 @@ export default class HandCard {
     }
 
     remove() {
-        cleanItems(this.lineCards)
+        removeItems(this.lineCards)
     }
 }

@@ -2,15 +2,17 @@
     出牌阶段
 */
 
-import { cloud_pickCard } from "../cloudFunc";
-import { createBtn, createMiniBtn } from "../common/btn";
-import Scene from "../common/scene";
-import { Btn_M_Height, Btn_M_Wdith, Btn_Width, HeadHeight, MyHead_Top, Screen_Width } from "../Defines";
-import BottomCard from "../player/bottomCard";
-import HandCard from "../player/handCard";
-import PlayersIcon from "../player/playerIcon";
-import TurnPickCard from "../player/turnPickCard";
-import { colorName, GameStep, isFocuseMy, playerName } from "../util";
+import { cloud_pickCard } from "../control/cloudFunc";
+import { createBtn, createMiniBtn } from "../View/btn";
+import Scene from "../scene/scene";
+import { BottomCard_Top, Btn_Height, Btn_M_Height, Btn_M_Wdith, Btn_Width, HeadHeight, MyHead_Top } from "../common/Defines";
+import BottomCard from "../View/bottomCard";
+import HandCard from "../View/handCard";
+import PlayersIcon from "../View/playerIcon";
+import TurnPickCard from "../View/turnPickCard";
+import { cardRanks, colorName, GameStep, getUserKeyBySeat, isFocuseMy, playerName, Seat } from "../common/util";
+
+const Screen_Width = GameGlobal.canvas.width
 
 export default class ScenePickCard extends Scene {
   constructor() {
@@ -22,9 +24,9 @@ export default class ScenePickCard extends Scene {
     this.bottomCard = new BottomCard(true)
     this.turnPickCard = new TurnPickCard()
 
-    const x = Screen_Width - 16 - Btn_M_Wdith
-    const y = MyHead_Top + (HeadHeight - Btn_M_Height) / 2
-    this.confirmBtn = createMiniBtn(x, y, "出牌", this.handleOfClickConfirm.bind(this))
+    const x = Screen_Width - Btn_Width - 16
+    const y = BottomCard_Top - 16 - Btn_Height
+		this.confirmBtn = createBtn(x, y, "出牌", this.handleOfClickConfirm.bind(this))
   }
 
   // 确认出牌
@@ -35,7 +37,7 @@ export default class ScenePickCard extends Scene {
       this.isShowBottom = !this.isShowBottom
     } else {
       const cardIds = this.handCard.getSelectCardIds()
-      if (cardIds.length > 0 && isFocuseMy()) {
+      if (cardIds.length > 0 && this.isFocuse) {
         cloud_pickCard(cardIds)
       }
     }
@@ -48,12 +50,16 @@ export default class ScenePickCard extends Scene {
     if (this.needUpdate) {
       this.playersIcon.update()
       this.turnPickCard.update()
-      this.handCard.update(GameGlobal.databus.handCards)
+ 
+      const userKey = getUserKeyBySeat(Seat.Down)
+      const cardIds = GameGlobal.databus.gameInfo[userKey].handCards
+			const handCards = cardRanks(cardIds)
+			this.handCard.update(handCards)
 
       this.isEnemy = GameGlobal.databus.gameInfo.enemyPlayer == GameGlobal.databus.userId ? true : false
       if (this.isEnemy) {
         const bottomCard = GameGlobal.databus.gameInfo.bottomEndCards
-      this.bottomCard.update(bottomCard)
+        this.bottomCard.update(bottomCard)
       }
     }
   }
@@ -62,7 +68,7 @@ export default class ScenePickCard extends Scene {
     this.playersIcon.render(ctx)
     this.turnPickCard.render(ctx)
     this.handCard.render(ctx)
-    if (this.focuse) {
+    if (this.isFocuse) {
       this.confirmBtn.render(ctx)
     }
     if (this.isEnemy) {

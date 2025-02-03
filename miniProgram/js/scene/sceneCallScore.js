@@ -2,14 +2,11 @@
     叫分选庄的场景
 */
 
-import { cloud_callScore } from "../cloudFunc";
-import { createBtn } from "../common/btn";
-import Scene from "../common/scene";
-import { Btn_M_Height, Btn_Width, PickBtn_Top, Screen_Height, Screen_Width } from "../Defines";
-import HandCard from "../player/handCard";
-import PlayersIcon from "../player/playerIcon";
-import PlayerSelect from "../player/playerSelect";
-import { GameStep, playerName } from "../util";
+import { cardRanks, GameStep, getUserKeyBySeat, playerName, Seat } from "../common/util"
+import { cloud_callScore } from "../control/cloudFunc"
+import HandCard from "../View/handCard"
+import PlayersIcon from "../View/playerIcon"
+import Scene from "./scene"
 
 export default class SceneCallScore extends Scene {
 	constructor() {
@@ -47,11 +44,15 @@ export default class SceneCallScore extends Scene {
     }
 
 	updateScene() {
-    this.handCard.remove()
+    	this.handCard.remove()
       
 		if (this.needUpdate) {
 			this.playersIcon.update()
-			this.handCard.update(GameGlobal.databus.handCards)
+
+			const userKey = getUserKeyBySeat(Seat.Down)
+			const cardIds = GameGlobal.databus.gameInfo[userKey].handCards
+			const handCards = cardRanks(cardIds)
+			this.handCard.update(handCards)
 		}
 	}
 
@@ -67,7 +68,7 @@ export default class SceneCallScore extends Scene {
 	getTipStrs() {
 		if (GameGlobal.databus && GameGlobal.databus.gameInfo) {
 			const text1 = "游戏阶段：叫分"
-			const userId = GameGlobal.databus.gameInfo["focusPlayer"]
+			const userId = GameGlobal.databus.gameInfo.focusPlayer
 			const name = playerName(userId)
 			const text2 = "从" + name + "开始叫分"
 			return [text1, text2]

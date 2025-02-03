@@ -2,10 +2,10 @@
 	展示本轮玩家出牌
 */
 
-import { createCard } from "../common/card";
-import { BottomCard_Top, Card_Height, HeadHeight, LeftCard_Top, MyCard_Top, MyHead_Top, Name_CenterY, RightCard_Top, RightHead_Top, Screen_Height, Screen_Width, TopCard_Top } from "../Defines";
-import { createLineCard } from "./lineCard";
+import { createCard } from "./card";
+import { BottomCard_Top, Card_Height, HeadHeight, LeftCard_Top, MyCard_Top, MyHead_Top, Name_CenterY, RightCard_Top, RightHead_Top, TopCard_Top } from "../common/Defines";
 import SectionCard from "./lineCard1";
+import { getUserKeyBySeat, Seat } from "../common/util";
 
 export default class TurnPickCard {
 	constructor() {
@@ -40,18 +40,22 @@ export default class TurnPickCard {
 
 	// index为当前出牌轮次
 	update() {
-		if (!GameGlobal.databus || !GameGlobal.databus.gameInfo) return
+		if (!GameGlobal.databus.gameInfo) return
 
-		const downCardIds = databus.gameInfo[databus.userKey].turnCards
+		const downKeys = getUserKeyBySeat(Seat.Down)
+		const downCardIds = databus.gameInfo[downKeys].turnCards
 		this.bottomCards.update(downCardIds)
 
-		const leftCardIds = databus.gameInfo[databus.leftKey].turnCards
+		const leftKeys = getUserKeyBySeat(Seat.Left)
+		const leftCardIds = databus.gameInfo[leftKeys].turnCards
 		this.leftCards.update(leftCardIds)
 
-		const topCardIds = databus.gameInfo[databus.upKey].turnCards
+		const topKeys = getUserKeyBySeat(Seat.Up)
+		const topCardIds = databus.gameInfo[topKeys].turnCards
 		this.topCards.update(topCardIds)
 
-		const rightCardIds = databus.gameInfo[databus.rightKey].turnCards
+		const rightKeys = getUserKeyBySeat(Seat.Right)
+		const rightCardIds = databus.gameInfo[rightKeys].turnCards
 		this.rightCards.update(rightCardIds)
 	}
 

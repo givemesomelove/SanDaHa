@@ -1,31 +1,24 @@
 /*
     较宽的按钮基类
 */
-
-import {
-    Btn_Height,
-    Btn_Icon,
-    Btn_M_Height,
-    Btn_M_Wdith,
-    Btn_Width,
-    Card_Select_Width,
-} from "../Defines";
-import { drawBtnRoundRect, makeImg } from "../util";
-import {
-    createLab
-} from "./lab";
+import { Btn_Height, Btn_M_Height, Btn_M_Wdith, Btn_Width, Card_Select_Width } from "../common/Defines"
+import { drawBtnRoundRect, isPointInFrame, makeImage } from "../common/util"
+import { createLab } from "./lab"
 
 export default class Btn {
     constructor() {
-        this.image = makeImg("scene1_btn")
+        
+        this.image = makeImage("scene1_btn")
+        
         this.width = Btn_Width
         this.height = Btn_Height
-        this.selectImage = makeImg("select")
+        this.selectImage = makeImage("select")
         this.lab = null
         this.select = false
         this.clickBlock = null
         this.online = false
         this.unClickable = false
+        this.showSelect = false
     }
 
     // 配置按钮元素
@@ -53,7 +46,6 @@ export default class Btn {
 
     // 刷新显示
     render(ctx) {
-
         if (!this.unClickable) {
             // 可点击背景
             ctx.drawImage(this.image, this.x, this.y, this.width, this.height)
@@ -83,21 +75,21 @@ export default class Btn {
 
     // 是否被点击了
     isClicked(x, y) {
-        return x > this.x &&
-            x < this.x + this.width &&
-            y > this.y &&
-            y < this.y + this.height
+        return isPointInFrame(x, y, this.x, this.y, this.width, this.height)
     }
 
     // 点击事件处理
     handleOfClick = (x, y) => {
-        if (this.isClicked(x, y) && !GameGlobal.btnEventBlocked && !this.unClickable) {
-            this.select = !this.select
+        if (this.isClicked(x, y) &&
+            !GameGlobal.btnEventBlocked &&
+            !this.unClickable) {
+            this.select = true
             if (this.clickBlock) this.clickBlock()
             GameGlobal.btnEventBlocked = true
             setTimeout(() => {
                 GameGlobal.btnEventBlocked = false
-            }, 800)
+                if (!this.showSelect) this.select = false                
+            }, 500)
         }
     }
 }

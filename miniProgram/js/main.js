@@ -1,39 +1,41 @@
-import Music from './runtime/music'; // 导入音乐类
-import DataBus from './databus'; // 导入数据类，用于管理游戏状态和数据
-import {
-    Screen_Height,
-    Screen_Width
-} from './Defines';
-import SceneReady from './scene/sceneReady';
-import SceneCallScore from './scene/sceneCallScore';
-import SceneBottomAColor from './scene/sceneBottomAndColor';
-import ScenePickCard from './scene/scenePickCard';
-import ScenePickWin from './scene/sceneSelectWin';
-import SceneEnd from './scene/sceneEnd';
-import Prepare from './prepare';
+import Prepare from "./prepare"
+import { renderItems, updateItems } from "./common/util"
+import SceneReady from "./scene/sceneReady"
+import SceneCallScore from "./scene/sceneCallScore"
+import SceneBottomAColor from "./scene/sceneBottomAndColor"
+import ScenePickCard from "./scene/scenePickCard"
 
 /**
  * 游戏主函数
  */
 export default class Main {
     aniId = 0; // 用于存储动画帧的ID
-    sceneReady = new SceneReady();
-    sceneCallScore = new SceneCallScore();
-    sceneBottomAColor = new SceneBottomAColor();
-    scenePickCard = new ScenePickCard();
-    scenePickWin = new ScenePickWin();
-    sceneEnd = new SceneEnd();
 
     constructor() {
-        this.prepare = new Prepare()
+        this.prepare = new Prepare(
+            this.handleOfRoomChanged.bind(this),
+            this.handleOfGameChanged.bind(this),
+        )
+        // 画布
+        this.canvas = GameGlobal.canvas
+        this.ctx = canvas.getContext('2d');
+        
+        GameGlobal.databus.loginBlock = this.handleOfLogin.bind(this)
 
-        GameGlobal.databus = new DataBus(); // 全局数据管理，用于管理游戏状态和数据
-        this.update = this.update.bind(this);
-        GameGlobal.databus.updateBlock = this.update;
-        GameGlobal.musicManager = new Music(); // 全局音乐管理实例
-
+        this.initScene()
         // 开始游戏
         this.start();
+    }
+
+    // 初始化场景
+    initScene() {
+        this.readyScene = new SceneReady()
+        this.callScoreScene = new SceneCallScore()
+        this.bottomAndColorScene = new SceneBottomAColor()
+        this.pickCardScene = new ScenePickCard()
+        // this.selectWinScene = new SceneSelectWin()
+        // this.endScene = new SceneEnd()
+        this.scenes = [this.readyScene, this.callScoreScene, this.bottomAndColorScene, this.pickCardScene]
     }
 
     /**
@@ -56,23 +58,27 @@ export default class Main {
      * 每一帧重新绘制所有的需要展示的元素
      */
     render() {
-        ctx.clearRect(0, 0, Screen_Width, Screen_Height); // 清空画布
+        this.ctx.clearRect(0, 0, GameGlobal.canvas.width, GameGlobal.canvas.height); // 清空画布
 
-        this.sceneReady.render(ctx)
-        this.sceneCallScore.render(ctx)
-        this.sceneBottomAColor.render(ctx)
-        this.scenePickCard.render(ctx)
-        this.scenePickWin.render(ctx)
-        this.sceneEnd.render(ctx)
+        renderItems(this.scenes, this.ctx)
     }
 
     // 游戏逻辑更新主函数
     update() {
-        this.sceneReady && this.sceneReady.update()
-        this.sceneCallScore && this.sceneCallScore.update()
-        this.sceneBottomAColor && this.sceneBottomAColor.update()
-        this.scenePickCard && this.scenePickCard.update()
-        this.scenePickWin && this.scenePickWin.update()
-        this.sceneEnd && this.sceneEnd.update()
+        updateItems(this.scenes)
+    }
+
+    handleOfRoomChanged = data => {
+        GameGlobal.databus.updateRoomData(data)
+        this.update()
+    }
+
+    handleOfGameChanged = data => {
+        GameGlobal.databus.updateGameData(data)
+        this.update()
+    }
+
+    handleOfLogin = userId => {
+        this.update()
     }
 }

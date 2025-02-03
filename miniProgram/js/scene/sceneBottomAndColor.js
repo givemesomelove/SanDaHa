@@ -2,28 +2,33 @@
 	庄家埋底选主
 */
 
-import { cloud_bottomAColor } from "../cloudFunc";
-import { createBtn } from "../common/btn";
-import Scene from "../common/scene";
+const Screen_Width = GameGlobal.canvas.width
+const Screen_Height = GameGlobal.canvas.height
+
+import { cloud_bottomAColor } from "../control/cloudFunc";
+import { createBtn } from "../View/btn";
+import Scene from "../scene/scene";
 import {
   BottomCard_Top,
+	Btn_Height,
 	Btn_M_Height,
 	Btn_Width,
-	Scene_Start_Bg_Icon,
-	Screen_Height,
-	Screen_Width
-} from "../Defines";
-import BottomCard from "../player/bottomCard";
-import ColorPicker from "../player/colorPicker";
-import HandCard from "../player/handCard";
-import PlayersIcon from "../player/playerIcon";
+} from "../common/Defines";
+import BottomCard from "../View/bottomCard";
+import ColorPicker from "../View/colorPicker";
+import HandCard from "../View/handCard";
+import PlayersIcon from "../View/playerIcon";
 import {
 	cardRanks,
 	drawBg,
 	GameStep,
 	getCurStep,
-	playerName
-} from "../util";
+	getUserKeyBySeat,
+	playerName,
+	Seat,
+	showLoading,
+	tipToast
+} from "../common/util";
 
 export default class SceneBottomAColor extends Scene {
 	constructor() {
@@ -32,11 +37,11 @@ export default class SceneBottomAColor extends Scene {
 
 		this.playersIcon = new PlayersIcon()
 		this.handCard = new HandCard(this.handleOfClickHand.bind(this))
-		this.colorSelect = new ColorPicker(BottomCard_Top - Btn_M_Height - 5)
+		this.colorSelect = new ColorPicker()
 		this.bottomCard = new BottomCard(false, this.handleOfClickBottom.bind(this))
 
-		const x = Screen_Width / 2 - Btn_Width / 2
-		const y = 200
+		const x = Screen_Width - Btn_Width - 16
+		const y = BottomCard_Top - 16 - Btn_Height
 		this.confirmBtn = createBtn(x, y, "确认埋底", this.handleOfClickConfirm.bind(this))
 	}
 
@@ -45,34 +50,34 @@ export default class SceneBottomAColor extends Scene {
 		// 判断是否选了主色
 		const color = this.colorSelect.getCurColor()
 		if (color <= 0) {
-			wx.showToast({ title: '没有选主色'})
+			tipToast('没有选主色')
 			return
 		}
 		// 判断底牌是不是八张
 		const cardIds = this.bottomCard.getCardIds()
 		if (cardIds.length != 8) {
-			wx.showToast({ title: '底牌没有埋好'})
+			tipToast('没有埋底')
 			return
 		}
 		cloud_bottomAColor(color, cardIds)
 	}
 
-	handleOfClickBottom(index) {
+	handleOfClickBottom(cardId) {
 		let bottomCardIds = this.bottomCard.getCardIds()
-		const clickCardId = bottomCardIds[index]
+		const index = bottomCardIds.indexOf(cardId)
 		// 处理底牌
 		bottomCardIds.splice(index, 1)
 		this.bottomCard.update(bottomCardIds)
 		// 处理手牌
 		let handCardIds = this.handCard.getCardIds()
-		handCardIds.push(clickCardId)
+		handCardIds.push(cardId)
 		handCardIds = cardRanks(handCardIds)
 		this.handCard.update(handCardIds)
 	}
 
-	handleOfClickHand(index) {
+	handleOfClickHand(cardIds) {
 		let handCardIds = this.handCard.getCardIds()
-		const clickCardId = handCardIds[index]
+		const clickCardId = cardIds[0]
 		// 处理底牌
 		let bottomCardIds = this.bottomCard.getCardIds()
 		if (bottomCardIds.length >= 8) {
@@ -83,6 +88,7 @@ export default class SceneBottomAColor extends Scene {
 		bottomCardIds = cardRanks(bottomCardIds)
 		this.bottomCard.update(bottomCardIds)
 		// 处理手牌
+		const index = handCardIds.indexOf(clickCardId)
 		handCardIds.splice(index, 1)
 		this.handCard.update(handCardIds)
 		
@@ -95,9 +101,11 @@ export default class SceneBottomAColor extends Scene {
 
 		if (this.needUpdate) {
 			this.playersIcon.update()
-			this.handCard.update(GameGlobal.databus.handCards)
-			const y = BottomCard_Top - Btn_M_Height - 2
-			this.colorSelect.update(y)
+
+			const userKey = getUserKeyBySeat(Seat.Down)
+			const cardIds = GameGlobal.databus.gameInfo[userKey].handCards
+			const handCards = cardRanks(cardIds)
+			this.handCard.update(handCards)
 
 			const bottomCard = GameGlobal.databus.gameInfo.bottomStartCards
 			this.bottomCard.update(bottomCard)
@@ -121,11 +129,10 @@ export default class SceneBottomAColor extends Scene {
 
 	getTipStrs() {
 		if (GameGlobal.databus && GameGlobal.databus.gameInfo) {
-			const text1 = "游戏阶段：埋底和选主色"
 			const userId = GameGlobal.databus.gameInfo["focusPlayer"]
 			const name = playerName(userId)
 			const text2 = "庄家是" + name
-			return [text1, text2]
+			return [text2]
 		}
 		return [
 			[]
