@@ -4,6 +4,8 @@ import SceneReady from "./scene/sceneReady"
 import SceneCallScore from "./scene/sceneCallScore"
 import SceneBottomAColor from "./scene/sceneBottomAndColor"
 import ScenePickCard from "./scene/scenePickCard"
+import SceneSelectWin from "./scene/sceneSelectWin"
+import SceneEnd from "./scene/sceneEnd"
 
 /**
  * 游戏主函数
@@ -33,9 +35,9 @@ export default class Main {
         this.callScoreScene = new SceneCallScore()
         this.bottomAndColorScene = new SceneBottomAColor()
         this.pickCardScene = new ScenePickCard()
-        // this.selectWinScene = new SceneSelectWin()
-        // this.endScene = new SceneEnd()
-        this.scenes = [this.readyScene, this.callScoreScene, this.bottomAndColorScene, this.pickCardScene]
+        this.selectWinScene = new SceneSelectWin()
+        this.endScene = new SceneEnd()
+        this.scenes = [this.readyScene, this.callScoreScene, this.bottomAndColorScene, this.pickCardScene, this.selectWinScene, this.endScene]
     }
 
     /**

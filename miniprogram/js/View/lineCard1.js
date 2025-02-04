@@ -18,8 +18,7 @@ export default class SectionCard {
     }
 
     update(cardIds) {
-        removeItems(this.cards)
-        this.cards = []
+        this.remove()
 
         let cardWidth = Card_Width
         const count = cardIds.length
@@ -75,6 +74,7 @@ export default class SectionCard {
 
     remove() {
         removeItems(this.cards)
+        this.cards = []
     }
 
 }

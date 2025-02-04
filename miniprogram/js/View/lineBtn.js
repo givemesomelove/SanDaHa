@@ -66,6 +66,7 @@ export default class LineBtn {
 
 	remove() {
 		removeItems(this.btns)
+		this.btns = []
 		GameGlobal.pool.recover('lineBtn', this)
 	}
 

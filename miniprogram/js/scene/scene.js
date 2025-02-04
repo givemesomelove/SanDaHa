@@ -5,6 +5,8 @@
 import { menuFrame } from "../common/Defines"
 import { isEnemyMy, isFocuseMy, makeImage, getCurStep } from "../common/util"
 import { createLab, createLabs } from "../View/lab"
+import MainColorImg from "../View/mainColorImg"
+import ReStartBtn from "../View/startGameBtn"
 
 export default class Scene {
 	constructor() {
@@ -23,6 +25,11 @@ export default class Scene {
 		this.isEnemy = false
 
 		this.stepLab = createLab(this.width / 2, (menuFrame.top + menuFrame.bottom) / 2, "", 'black')
+
+		// 重开游戏按钮
+		this.reStartBtn = new ReStartBtn()
+
+		this.mainColorImg = new MainColorImg()
 	}
 
 	// 点击事件接收
@@ -33,6 +40,7 @@ export default class Scene {
 		} = e.changedTouches[0];
 
 		this.handleOfSceneClick(x, y)
+		this.reStartBtn.handleOfClick(x, y)
 	}
 
 	// 添加点击事件
@@ -65,6 +73,8 @@ export default class Scene {
 			this.initEvent()
 			this.tipLabs.texts = this.getTipStrs()
 			this.stepLab.text = gameStep
+			this.mainColorImg.update()
+			this.reStartBtn.update()
 		} else {
 			this.removeEvent()
 		}
@@ -76,6 +86,8 @@ export default class Scene {
 			this.tipLabs.render(ctx)
 			this.stepLab.render(ctx)
 			this.renderScene(ctx)
+			this.reStartBtn.render(ctx)
+			this.mainColorImg.render(ctx)
 		}
 	}
 

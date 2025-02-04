@@ -7,7 +7,7 @@ const Screen_Height = GameGlobal.canvas.height
 
 import { cloud_bottomAColor } from "../control/cloudFunc";
 import { createBtn } from "../View/btn";
-import Scene from "../scene/scene";
+import Scene from "./scene";
 import {
   BottomCard_Top,
 	Btn_Height,
@@ -96,7 +96,6 @@ export default class SceneBottomAColor extends Scene {
 
 	updateScene() {
 		this.handCard.remove()
-		this.colorSelect.remove()
 		this.bottomCard.remove()
 
 		if (this.needUpdate) {

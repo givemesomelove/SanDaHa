@@ -2,7 +2,7 @@
     叫分选庄的场景
 */
 
-import { cardRanks, GameStep, getUserKeyBySeat, playerName, Seat } from "../common/util"
+import { cardRanks, GameStep, getUserKeyBySeat, isGMMy, playerName, Seat } from "../common/util"
 import { cloud_callScore } from "../control/cloudFunc"
 import HandCard from "../View/handCard"
 import PlayersIcon from "../View/playerIcon"
@@ -19,6 +19,8 @@ export default class SceneCallScore extends Scene {
 
 	// 点击选庄
     handleOfClickEnemy(userKey) {
+		if (!isGMMy()) return
+
       const userId = GameGlobal.databus.gameInfo[userKey].playerId
         const name = playerName(userId)
         const title = "庄家是" + name + ",输入叫分结果"

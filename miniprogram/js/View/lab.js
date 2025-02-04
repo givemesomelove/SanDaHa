@@ -16,6 +16,16 @@ export default class Lab {
         this.color = color
     }
 
+    // 配置右边对齐
+    configRight(x, y, text, color) {
+        this.centerX = x
+        this.centerY = y
+        this.text = text
+        this.single = true
+        this.isRight = true
+        this.color = color
+    }
+
     // 配置多行文字，左上对齐
     configMuti(x, y, texts, color) {
         this.x = x
@@ -40,7 +50,10 @@ export default class Lab {
 
         if (this.single && this.text) {
             const size = ctx.measureText(this.text)
-            const x = this.centerX - size.width / 2
+            let x = this.centerX - size.width / 2
+            if (this.isRight) {
+                x = this.centerX - size.width
+            }
             const y = this.centerY + 2
             ctx.fillText(this.text, x, y)
         } else if (!this.single && this.texts) {
@@ -56,6 +69,12 @@ export default class Lab {
 export const createLab = (x, y, text, color) => {
     let lab = GameGlobal.pool.getItemByClass('lab', Lab)
     lab.configCenter(x, y, text, color)
+    return lab
+}
+
+export const createRightLab = (x, y, text, color) => {
+    let lab = GameGlobal.pool.getItemByClass('lab', Lab)
+    lab.configRight(x, y, text, color)
     return lab
 }
 

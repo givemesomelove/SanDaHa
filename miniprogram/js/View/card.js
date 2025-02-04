@@ -38,6 +38,7 @@ export default class Card {
 
     // 销毁
     remove() {
+
         GameGlobal.pool.recover('card', this)
     }
 
@@ -45,6 +46,8 @@ export default class Card {
     render(ctx) {
         if (this.image) {
             ctx.drawImage(this.image, this.x, this.y, this.width, this.height)
+        } else {
+            console.log("卡牌无图片")
         }
 
         if (this.select) {
@@ -74,6 +77,7 @@ export default class Card {
 
 export const createCard = (x, y, cardId, clickableWidth, clickBlock) => {
     let card = GameGlobal.pool.getItemByClass('card', Card)
+    console.log("create时的tag：", card.tag)
     card.config(x, y, cardId, clickableWidth, clickBlock)
     return card
 }

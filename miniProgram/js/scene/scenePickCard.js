@@ -4,7 +4,7 @@
 
 import { cloud_pickCard } from "../control/cloudFunc";
 import { createBtn, createMiniBtn } from "../View/btn";
-import Scene from "../scene/scene";
+import Scene from "./scene";
 import { BottomCard_Top, Btn_Height, Btn_M_Height, Btn_M_Wdith, Btn_Width, HeadHeight, MyHead_Top } from "../common/Defines";
 import BottomCard from "../View/bottomCard";
 import HandCard from "../View/handCard";
@@ -31,16 +31,10 @@ export default class ScenePickCard extends Scene {
 
   // 确认出牌
   handleOfClickConfirm() {
-    this.confirmBtn.select = false
-
-    if (this.isPickCard) {
-      this.isShowBottom = !this.isShowBottom
-    } else {
-      const cardIds = this.handCard.getSelectCardIds()
+    const cardIds = this.handCard.getSelectCardIds()
       if (cardIds.length > 0 && this.isFocuse) {
         cloud_pickCard(cardIds)
       }
-    }
   }
 
   updateScene() {
@@ -78,7 +72,7 @@ export default class ScenePickCard extends Scene {
 
   handleOfSceneClick(x, y) {
     this.handCard.handleOfClick(x, y)
-    if (this.focuse) {
+    if (this.isFocuse) {
       this.confirmBtn.handleOfClick(x, y)
     }
     if (this.isEnemy) {
@@ -88,13 +82,10 @@ export default class ScenePickCard extends Scene {
 
   getTipStrs() {
     if (GameGlobal.databus && GameGlobal.databus.gameInfo) {
-      const text1 = "游戏阶段：出牌阶段"
       const userId = GameGlobal.databus.gameInfo["focusPlayer"]
       const name = playerName(userId)
-      const text3 = "当前主色：" + colorName(GameGlobal.databus.gameInfo.mainColor)
-      const text2 = name + "出牌，" + text3
-      const text4 = "目标分数：" + GameGlobal.databus.gameInfo.targetScore + ",当前分数:" + GameGlobal.databus.gameInfo.curScore
-      return [text1, text2, text4]
+      const text2 = name + "出牌"
+      return [text2]
     }
     return [[]]
   }

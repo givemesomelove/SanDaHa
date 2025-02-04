@@ -10,17 +10,16 @@
             "ignore": [],
             "disablePlugins": [],
             "outputPath": ""
-        }
+        },
+        "coverView": false,
+        "enhance": false,
+        "showShadowRootInWxmlPanel": false,
+        "packNpmRelationList": [],
+        "ignoreUploadUnusedFiles": true
     },
     "compileType": "game",
     "libVersion": "latest",
-    "appid": "wx722b77b372556a67",
-    "projectname": "quickstart",
     "condition": {},
-    "packOptions": {
-        "ignore": [],
-        "include": []
-    },
     "editorSetting": {
         "tabIndent": "insertSpaces",
         "tabSize": 4
@@ -28,5 +27,10 @@
     "miniprogramRoot": "miniprogram/",
     "cloudfunctionRoot": "cloudfunctions/",
     "cloudfunctionTemplateRoot": "cloudfunctionTemplate/",
-    "srcMiniprogramRoot": "miniprogram/"
+    "srcMiniprogramRoot": "miniprogram/",
+    "packOptions": {
+        "ignore": [],
+        "include": []
+    },
+    "appid": "wx722b77b372556a67"
 }

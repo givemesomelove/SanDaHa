@@ -2,11 +2,11 @@
 	游戏结束
 */
 
-import Scene from "../common/scene";
-import BottomCard from "../player/bottomCard";
-import PlayersIcon from "../player/playerIcon";
-import TurnPickCard from "../player/turnPickCard";
-import { GameStep, playerName } from "../util";
+import Scene from "./scene";
+import BottomCard from "../View/bottomCard";
+import PlayersIcon from "../View/playerIcon";
+import TurnPickCard from "../View/turnPickCard";
+import { GameStep, playerName } from "../common/util";
 
 export default class SceneEnd extends Scene {
 	constructor() {

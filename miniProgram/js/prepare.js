@@ -24,7 +24,9 @@ export default class Prepare {
 		// 读取卡牌列表
 		this.readCardListFile()
 
-		wx.cloud.init({ env: wx.cloud.dynamicCurrentEnv });
+		wx.cloud.init({
+			env: wx.cloud.dynamicCurrentEnv
+		});
 		const db = wx.cloud.database();
 		// 从云端读取数据库
 		this.loadDbData(db)
@@ -33,6 +35,8 @@ export default class Prepare {
 		this.maxGameWatchRetryTimes = 10
 		this.startRoomWatching(db)
 		this.startGameWatching(db)
+
+		this.loadExtraImg()
 	}
 
 	// 读取卡牌列表
@@ -47,12 +51,12 @@ export default class Prepare {
 				try {
 					// 完整处理流程
 					const jsonArray = res.data
-						.split('\n')                    // 分割行
-						.map(line => line.trim())       // 去除首尾空格
-						.filter(Boolean)                // 过滤空行
+						.split('\n') // 分割行
+						.map(line => line.trim()) // 去除首尾空格
+						.filter(Boolean) // 过滤空行
 						.map(line => {
 							try {
-								return JSON.parse(line);    // 逐行解析
+								return JSON.parse(line); // 逐行解析
 							} catch (e) {
 								console.warn('解析失败的行:', line);
 								return null;
@@ -71,7 +75,9 @@ export default class Prepare {
 					}
 				} catch (err) {
 					console.error("全局解析错误:", err);
-					wx.showToast({ title: '卡牌数据加载失败' });
+					wx.showToast({
+						title: '卡牌数据加载失败'
+					});
 				}
 			},
 			fail(err) {
@@ -126,11 +132,15 @@ export default class Prepare {
 			}
 		});
 	}
+
+	// 额外准备的图片
+	loadExtraImg() {
+		const names = ["color_1", "color_2", "color_3", "color_4", "color_5"]
+		for (const name of names) {
+			const imv = wx.createImage()
+			const path = "images/" + name + ".png"
+			imv.src = path
+			GameGlobal.imgs[name] = imv
+		}
+	}
 }
-
-
-
-
-
-
-

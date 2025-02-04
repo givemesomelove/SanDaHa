@@ -11,6 +11,7 @@ const __ = {
 export default class Pool {
   constructor() {
     this[__.poolDic] = {};
+    this.count = 0
   }
 
   /**
@@ -27,9 +28,7 @@ export default class Pool {
    */
   getItemByClass(name, className) {
     const pool = this.getPoolBySign(name);
-
-    const result = pool.length ? pool.shift() : new className();
-
+    const result = pool.length ? pool.pop() : new className();
     return result;
   }
 
@@ -39,5 +38,9 @@ export default class Pool {
    */
   recover(name, instance) {
     this.getPoolBySign(name).push(instance);
+  }
+
+  printPool() {
+    const pool = this.getPoolBySign('card');
   }
 }

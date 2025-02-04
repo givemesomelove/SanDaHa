@@ -90,8 +90,4 @@ export default class ColorPicker {
 	render(ctx) {
 		renderItems(this.btns, ctx)
 	}
-
-	remove() {
-		removeItems(this.btns)
-	}
 }

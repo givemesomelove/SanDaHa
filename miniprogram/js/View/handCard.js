@@ -27,8 +27,7 @@ export default class HandCard {
     }
 
     update(handCardIds) {
-        removeItems(this.lineCards)
-        this.lineCards = []
+        this.remove()
 
         if (!handCardIds || handCardIds.lenght <= 0) return
 
@@ -81,5 +80,6 @@ export default class HandCard {
 
     remove() {
         removeItems(this.lineCards)
+        this.lineCards = []
     }
 }

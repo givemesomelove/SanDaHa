@@ -300,11 +300,20 @@ export const isFocuseMy = () => {
   return GameGlobal.databus.gameInfo.focusPlayer == GameGlobal.databus.userId
 }
 
+// 当前玩家是庄家吗
 export const isEnemyMy = () => {
   if (!GameGlobal.databus.gameInfo ||
     !GameGlobal.databus.userId) return false
 
   return GameGlobal.databus.gameInfo.enemyPlayer == GameGlobal.databus.userId
+}
+
+// 当前玩家是管理员吗
+export const isGMMy = () => {
+  if (!GameGlobal.databus.userId) return false
+
+  const userName = playerName(GameGlobal.databus.userId)
+  return userName == "虎别"
 }
 
 // 获取主色编号对应字符串

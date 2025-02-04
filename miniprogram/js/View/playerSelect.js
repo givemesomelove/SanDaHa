@@ -2,7 +2,7 @@
 	选择其中一位玩家
 */
 
-import { clickItems, playerName, playerNames } from "../util"
+import { clickItems, playerName, playerNames } from "../common/util"
 import { createLineBtn } from "./lineBtn"
 
 export default class PlayerSelect {

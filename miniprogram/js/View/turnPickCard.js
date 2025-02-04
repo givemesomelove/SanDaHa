@@ -45,7 +45,7 @@ export default class TurnPickCard {
 		const downKeys = getUserKeyBySeat(Seat.Down)
 		const downCardIds = databus.gameInfo[downKeys].turnCards
 		this.bottomCards.update(downCardIds)
-
+		
 		const leftKeys = getUserKeyBySeat(Seat.Left)
 		const leftCardIds = databus.gameInfo[leftKeys].turnCards
 		this.leftCards.update(leftCardIds)

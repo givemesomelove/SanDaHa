@@ -8,7 +8,6 @@ cloud.init({
 }) // 使用当前云环境
 const db = cloud.database();
 
-
 // 删除上把游戏
 const deleteGame = async () => {
     console.log("删除")
@@ -196,10 +195,12 @@ const pick_card = async (cards, userKey, userId) => {
 
 // 选谁最大
 const select_turn_winner = async (userId) => {
+    const cardList = await db.collection('card').get();
     // 计算当前牌的总分数
     const sumScore = (cards) => {
         let score = 0;
-        for (const card in cards) {
+        for (const cardId of cards) {
+            const card = cardList.data.find(item => item.id == cardId)
             if (card["num"] == 5 || card["num"] == 10) {
                 score = score + card["num"];
             } else if (card["num"] == 13) {

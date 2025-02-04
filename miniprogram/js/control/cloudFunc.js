@@ -150,7 +150,7 @@ exports.cloud_pickCard = (cardIds) => {
 	const data = {
 		"type" : 6,
 		"cards" : cardIds, 
-		"userKey" : GameGlobal.databus.userKey,
+		"userKey" : getUserKeyBySeat(Seat.Down),
 		"userId" : GameGlobal.databus.userId
 	}
 	cloudFunc({
