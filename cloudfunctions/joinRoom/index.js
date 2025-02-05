@@ -67,6 +67,18 @@ const db_outRoom = async (userId) => {
     }
 }
 
+// 玩家排序修改
+const db_randPlayers = async (players) => {
+    const roomResult = await db.collection('room').limit(1).get()
+    const roomRecord = roomResult.data[0];
+    // 将当前玩家加入房间
+    await db.collection('room').doc(roomRecord._id).update({
+        data: {
+            "players": players
+        }
+    });
+}
+
 // 云函数入口函数
 // event:
 // userId: 用户id
@@ -98,6 +110,10 @@ exports.main = async (event, context) => {
             const userId = event["userId"];
             db_outRoom(userId);
             break;
+        }
+        case 5: {
+            const players = event["players"]
+            db_randPlayers(players);
         }
     }
     return { success: true }

@@ -4,6 +4,7 @@
 
 import { cardRanks, GameStep, getUserKeyBySeat, isGMMy, playerName, Seat } from "../common/util"
 import { cloud_callScore } from "../control/cloudFunc"
+import CallScore from "../View/callScore"
 import HandCard from "../View/handCard"
 import PlayersIcon from "../View/playerIcon"
 import Scene from "./scene"
@@ -15,6 +16,8 @@ export default class SceneCallScore extends Scene {
 
 		this.playersIcon = new PlayersIcon(this.handleOfClickEnemy.bind(this))
 		this.handCard = new HandCard()
+
+		this.callScore = new CallScore()
 	}
 
 	// 点击选庄
@@ -61,6 +64,7 @@ export default class SceneCallScore extends Scene {
 	renderScene(ctx) {
 		this.playersIcon.render(ctx)
 		this.handCard.render(ctx)
+		this.callScore.render(ctx)
 	}
 
 	handleOfSceneClick(x, y) {
@@ -69,11 +73,10 @@ export default class SceneCallScore extends Scene {
 
 	getTipStrs() {
 		if (GameGlobal.databus && GameGlobal.databus.gameInfo) {
-			const text1 = "游戏阶段：叫分"
 			const userId = GameGlobal.databus.gameInfo.focusPlayer
 			const name = playerName(userId)
 			const text2 = "从" + name + "开始叫分"
-			return [text1, text2]
+			return [text2]
 		}
 		return [[]]
 	}

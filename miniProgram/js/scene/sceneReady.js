@@ -11,8 +11,10 @@ import {
 	cloud_joinRoom,
 	cloud_login,
 	cloud_outRoom,
+	cloud_randPlayers,
 	cloud_startGame
 } from "../control/cloudFunc";
+import BigIcon from "../View/bigIcon";
 import { createBtn } from "../View/btn";
 
 import Scene from "./scene"
@@ -22,6 +24,17 @@ export default class SceneReady extends Scene {
 		super()
 		this.bgImage = makeImage("sceneBg_2")
 		this.sceneStep = GameStep.Ready
+		
+		this.icons = this.initHeadIcon()
+	}
+
+	initHeadIcon() {
+		let icons = []
+		for (let i = 0; i < 4; i ++) {
+			const icon = new BigIcon(i)
+			icons.push(icon)
+		}
+		return icons
 	}
 
 	initLoginBtn() {
@@ -55,8 +68,8 @@ export default class SceneReady extends Scene {
 		const userId = GameGlobal.databus.userId
 		const online = getUserOnline(userId)
 
-		const x = this.width / 2 - Btn_Width / 2
-		const y = this.height / 2 - Btn_Height / 2
+		const x = this.width - Btn_Width - 32
+		const y = this.height - Btn_Height - 100
 		if (online) {
 			const btn = createBtn(x, y, "取消准备",this.handleOfOutRoom.bind(this))
 			return [btn]
@@ -68,17 +81,43 @@ export default class SceneReady extends Scene {
 
 	// 准备按钮(管理员)
 	initGMBtns() {
-		const titles = ["创建房间", "加入房间", "删除房间", "开始游戏", "删除游戏"]
+		const titles = []
 		const blocks = []
-		blocks[0] = this.handleOfCreatRoom.bind(this)
-		blocks[1] = this.handleOfJoinRoom.bind(this)
-		blocks[2] = this.handleOfDeleteRoom.bind(this)
-		blocks[3] = this.handleOfCreateGame.bind(this)
-		blocks[4] = this.handleOfDeleteGame.bind(this)
+
+		// 删除、创建房间
+		if (GameGlobal.databus.roomStamp) {
+			titles.push("删除房间")
+			blocks.push(this.handleOfDeleteRoom.bind(this))
+		} else {
+			titles.push("创建房间")
+			blocks.push(this.handleOfCreatRoom.bind(this))
+		}
+		// 退出、加入房间
+		const userId = GameGlobal.databus.userId
+		const online = getUserOnline(userId)
+		if (online) {
+			titles.push("退出房间")
+			blocks.push(this.handleOfOutRoom.bind(this))
+		} else {
+			titles.push("加入房间")
+			blocks.push(this.handleOfJoinRoom.bind(this))
+		}
+		// 开始、删除游戏 
+		if (GameGlobal.databus.gameInfo) {
+			titles.push("删除游戏")
+			blocks.push(this.handleOfDeleteRoom.bind(this))
+		} else {
+			titles.push("开始游戏")
+			blocks.push(this.handleOfCreateGame.bind(this))
+		}
+
+		// 打乱玩家顺序
+		titles.push("打乱顺序")
+		blocks.push(this.handleOfRandRoom.bind(this))
 
 		let btns = []
 		const sideCount = Math.floor(titles.length / 2);
-		const x = this.width / 2 - Btn_Width / 2
+		const x = this.width - Btn_Width - 32
 		const y = this.height / 2 - Btn_Height / 2 - sideCount * Btn_Height
 		for (let i = 0; i < titles.length; i++) {
 			const btn = createBtn(x, y + i * Btn_Height, titles[i], blocks[i])
@@ -109,6 +148,14 @@ export default class SceneReady extends Scene {
 	handleOfOutRoom() {
 		if (!this.checkLoginState()) return;
 		cloud_outRoom()
+	}
+
+	// 打乱玩家顺序
+	handleOfRandRoom() {
+		if (!this.checkLoginState()) return;
+
+		let players = GameGlobal.databus.roomPlayers
+		cloud_randPlayers(players)
 	}
 
 	// 开始游戏
@@ -143,7 +190,16 @@ export default class SceneReady extends Scene {
 		removeItems(this.btns)
 		this.btns = []
 		if (!this.needUpdate) return
-
+		// 在线用户
+		if (GameGlobal.databus.roomStamp && GameGlobal.databus.roomPlayers) {
+			const userIds = GameGlobal.databus.roomPlayers
+			this.icons.forEach((item, index) => {
+				item.config(userIds[index]);
+			});
+		} else {
+			this.icons.forEach(item => item.config(null))
+		}
+		// 加载按钮
 		const userId = GameGlobal.databus.userId
 		// 是否登陆过
 		const localId = getLocalUserId()
@@ -164,10 +220,10 @@ export default class SceneReady extends Scene {
 		} else if (everLogin && isLogin && isGM) {
 			this.btns = this.initGMBtns()
 		}
-		console.log(this.btns)
 	}
 
 	renderScene(ctx) {
+		renderItems(this.icons, ctx)
 		renderItems(this.btns, ctx)
 	}
 

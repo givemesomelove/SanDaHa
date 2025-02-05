@@ -66,7 +66,7 @@ exports.cloud_deleteRoom = () => {
 		"type": 2,
 	};
 	cloudFunc({
-		name: "deleteRoom",
+		name: "joinRoom",
 		data: data,
 	})
 }
@@ -114,6 +114,18 @@ exports.cloud_deleteGame = () => {
 	}
 	cloudFunc({
 		name : "createGame",
+		data : data
+	})
+}
+
+// 打乱玩家顺序
+exports.cloud_randPlayers = (players) => {
+	const data = {
+		"type" : 5,
+		"players" : players
+	}
+	cloudFunc({
+		name : "joinRoom",
 		data : data
 	})
 }
