@@ -428,3 +428,59 @@ export const drawRoundedRectBorder = (ctx, x, y, width, height, radius, borderCo
   // 绘制边框
   ctx.stroke();
 }
+
+// 根据userId获取大头像
+export const bigHeadImg = userId => {
+  const name = playerName(userId)
+  if (name == "谭别") {
+    return makeImage("tan_big")
+  } else if (name == "西瓜别") {
+    return makeImage("gua_big")
+  } else if (name == "徐别") {
+    return makeImage("xu_big")
+  } else if (name == "鸟别") {
+    return makeImage("niao_big")
+  } else if (name == "虎别") {
+    return makeImage("hu_big")
+  }
+}
+
+export const userColor = userId => {
+  const name = playerName(userId)
+  if (name == "谭别") {
+    return '#f0bcbc'
+  } else if (name == "西瓜别") {
+    return '#a5e7ac'
+  } else if (name == "徐别") {
+    return '#e3c69e'
+  } else if (name == "鸟别") {
+    return '#b8c0e2'
+  } else if (name == "虎别") {
+    return '#d2d19d'
+  }
+}
+
+export const isUserCallScore = userId => {
+  if (!GameGlobal.databus.gameInfo) return false
+
+  const score = GameGlobal.databus.gameInfo.callScore[userId]
+  if (score && score == 0) return false
+
+  return true
+}
+
+export const curMaxCallScore = () => {
+  if (!GameGlobal.databus.gameInfo) return null
+
+  const callScore = GameGlobal.databus.gameInfo.callScore
+  const score = 100
+  const userId = null
+  for (const [key, value] of Object.entries(callScore)) {
+      if (score < value && value != 0) {
+        score = value
+        userId = key
+      }
+  }
+  return userId
+
+}

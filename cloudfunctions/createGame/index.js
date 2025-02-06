@@ -1,7 +1,7 @@
 // step: 游戏进程0:准备中; 1准备好了，叫分中; 2叫分结束，看底，埋底,选主色；3开始出牌；4一圈出完，第一个选谁最大； 5开始下一轮出牌;  6:结束胜负已分
 
 // 云函数入口文件
-const cloud = require('wx-server-sdk')
+const cloud = require('wx-server-sdk');
 console.log('当前环境是:', cloud.DYNAMIC_CURRENT_ENV)
 cloud.init({
     env: cloud.DYNAMIC_CURRENT_ENV
@@ -62,7 +62,6 @@ const game_ready = async (players) => {
     gameData["focusPlayer"] = players[0];
     gameData["curScore"] = 0;
     gameData["turnPlayers"] = players;
-    gameData["scorePlayers"] = players;
 
     player1 = {}
     player1["startCards"] = cards.slice(8, 8 + 19);
@@ -96,23 +95,56 @@ const game_ready = async (players) => {
     player4["playerId"] = players[3];
     gameData["player4Info"] = player4;
 
+    gameData["callScore"] = {}
+
     await db.collection('game').add({
         data: gameData
     });
+}
+
+const isCallScoreEnd = dict => {
+    let count = 0
+    let userId = null
+    for (const [key, value] of Object.entries(dict)) {
+        if (value == 0) {
+            count ++
+            if (count == 3) {
+                return true
+            }
+        } else {
+            userId = key
+        }
+    }
+    return userId
 }
 
 // 玩家叫分
 const call_score = async (userId, score) => {
     const gameResult = await db.collection('game').limit(1).get();
     const gameData = gameResult.data[0];
-    const curGame = {};
-    curGame["enemyPlayer"] = userId;
-    curGame["targetScore"] = score;
-    curGame["step"] = 2;
-    curGame["focusPlayer"] = userId;
-    await db.collection('game').doc(gameData._id).update({
-        data: curGame
-    });
+    const callScore = gameData["callScore"]
+    callScore.userId = score
+
+    const winner = isCallScoreEnd(callScore)
+    if (winner) {
+        const curGame = {};
+        curGame["enemyPlayer"] = winner;
+        curGame["targetScore"] = callScore[winner];
+        curGame["step"] = 2;
+        curGame["focusPlayer"] = winner;
+        await db.collection('game').doc(gameData._id).update({
+            data: curGame
+        });
+    } else {
+        const curGame = {}
+        curGame["focusPlayer"] = nextPlayer(userId)
+        curGame["callScore"] = callScore
+        await db.collection('game').doc(gameData._id).update({
+            data: curGame
+        });
+    }
+
+    
 }
 
 // 庄家埋地，选主色

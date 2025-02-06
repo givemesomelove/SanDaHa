@@ -1,4 +1,4 @@
-import { drawRoundRect, GameStep, makeImage, playerName } from "../common/util"
+import { bigHeadImg, drawRoundRect, GameStep, makeImage, playerName, userColor } from "../common/util"
 import { createLab } from "./lab"
 
 const Screen_Width = GameGlobal.canvas.width
@@ -24,24 +24,9 @@ export default class BigIcon {
 			return
 		}
 
-		const name = playerName(userId)
-		if (name == "谭别") {
-			this.image = makeImage("tan_big")
-			this.color = '#f0bcbc'
-		} else if (name == "西瓜别") {
-			this.image = makeImage("gua_big")
-			this.color = '#a5e7ac'
-		} else if (name == "徐别") {
-			this.image = makeImage("xu_big")
-			this.color = '#e3c69e'
-		} else if (name == "鸟别") {
-			this.image = makeImage("niao_big")
-			this.color = '#b8c0e2'
-		} else if (name == "虎别") {
-			this.image = makeImage("hu_big")
-			this.color = '#d2d19d'
-		}
-		this.lab = createLab(Screen_Width / 2, this.y + 40, name, 'black')
+		this.image = bigHeadImg(userId)
+		this.color = userColor(userId)
+		this.lab = createLab(Screen_Width / 2, this.y + 40, playerName(userId), 'black')
 	}
 
 	render(ctx) {

@@ -14,7 +14,7 @@ export default class SceneCallScore extends Scene {
 		super()
 		this.sceneStep = GameStep.CallScore
 
-		this.playersIcon = new PlayersIcon(this.handleOfClickEnemy.bind(this))
+		this.playersIcon = new PlayersIcon()
 		this.handCard = new HandCard()
 
 		this.callScore = new CallScore()
@@ -58,6 +58,7 @@ export default class SceneCallScore extends Scene {
 			const cardIds = GameGlobal.databus.gameInfo[userKey].handCards
 			const handCards = cardRanks(cardIds)
 			this.handCard.update(handCards)
+			this.callScore.update()
 		}
 	}
 
@@ -68,7 +69,8 @@ export default class SceneCallScore extends Scene {
 	}
 
 	handleOfSceneClick(x, y) {
-    this.playersIcon.handleOfClick(x, y)
+	this.playersIcon.handleOfClick(x, y)
+	this.callScore.handleOfClick(x, y)
 	}
 
 	getTipStrs() {

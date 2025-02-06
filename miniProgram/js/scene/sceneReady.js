@@ -155,6 +155,7 @@ export default class SceneReady extends Scene {
 		if (!this.checkLoginState()) return;
 
 		let players = GameGlobal.databus.roomPlayers
+		players = randomPlayers(players)
 		cloud_randPlayers(players)
 	}
 
@@ -167,7 +168,6 @@ export default class SceneReady extends Scene {
 		}
 
 		let players = GameGlobal.databus.roomPlayers
-		players = randomPlayers(players)
 		cloud_startGame(players)
 	}
 

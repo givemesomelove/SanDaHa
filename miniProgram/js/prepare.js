@@ -93,6 +93,7 @@ export default class Prepare {
 		db.collection('user').get().then(res => {
 			console.log("用户表读取成功:", res.data);
 			GameGlobal.allPlayers = res.data;
+			if (this.roomChangedBlock) this.roomChangedBlock
 		}).catch(err => {
 			console.log("用户表读取失败:", err);
 		});
