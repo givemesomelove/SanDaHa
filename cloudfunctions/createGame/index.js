@@ -8,6 +8,15 @@ cloud.init({
 }) // 使用当前云环境
 const db = cloud.database();
 
+// 下一位
+const nextPlayer = (players, player) => {
+    const index = players.indexOf(player);
+    if (index === 0) {
+        return players[players.length - 1];
+    }
+    return players[index - 1];
+}
+
 // 删除上把游戏
 const deleteGame = async () => {
     console.log("删除")
@@ -95,56 +104,62 @@ const game_ready = async (players) => {
     player4["playerId"] = players[3];
     gameData["player4Info"] = player4;
 
-    gameData["callScore"] = {}
-
+    // gameData["callScore"] = null
+    // gameData["curCaller"] = null
+    gameData["callPlayers"] = players
+    
     await db.collection('game').add({
         data: gameData
     });
-}
-
-const isCallScoreEnd = dict => {
-    let count = 0
-    let userId = null
-    for (const [key, value] of Object.entries(dict)) {
-        if (value == 0) {
-            count ++
-            if (count == 3) {
-                return true
-            }
-        } else {
-            userId = key
-        }
-    }
-    return userId
 }
 
 // 玩家叫分
 const call_score = async (userId, score) => {
     const gameResult = await db.collection('game').limit(1).get();
     const gameData = gameResult.data[0];
-    const callScore = gameData["callScore"]
-    callScore.userId = score
 
-    const winner = isCallScoreEnd(callScore)
-    if (winner) {
-        const curGame = {};
-        curGame["enemyPlayer"] = winner;
-        curGame["targetScore"] = callScore[winner];
-        curGame["step"] = 2;
-        curGame["focusPlayer"] = winner;
+    if (score == 0) {
+        // 0表示不要了
+        const curGame = {}
+        let players = gameData.callPlayers.filter(item => item != userId)
+        curGame["callers"] = players
+        if (players.count == 1) {
+            const winner = players[0]
+            curGame["enemyPlayer"] = winner;
+            curGame["targetScore"] = curGame["callScore"];
+            curGame["step"] = 2;
+            curGame["focusPlayer"] = winner;
+        } else {
+            const next = nextPlayer(players, userId)
+            curGame["focusPlayer"] = next
+        }
+        await db.collection('game').doc(gameData._id).update({
+            data: curGame
+        });
+    } else if (score == 5) {
+        // 直接叫到庄家
+        const curGame = {}
+        curGame["callScore"] = 5
+        curGame["curCaller"] = userId
+        curGame["callPlayers"] = [userId]
+
+        curGame["targetScore"] = 5
+        curGame["enemyPlayer"] = userId
+        curGame["step"] = 2
+        curGame["focusPlayer"] = userId;
         await db.collection('game').doc(gameData._id).update({
             data: curGame
         });
     } else {
         const curGame = {}
-        curGame["focusPlayer"] = nextPlayer(userId)
-        curGame["callScore"] = callScore
+        curGame["callScore"] = score
+        curGame["curCaller"] = userId
+        const next = nextPlayer(gameData.callPlayers, userId)
+        curGame["focusPlayer"] = next;
         await db.collection('game').doc(gameData._id).update({
             data: curGame
         });
     }
-
-    
 }
 
 // 庄家埋地，选主色
@@ -167,15 +182,6 @@ const select_bottomAndColor = async (cards, userKey, color) => {
     await db.collection('game').doc(gameData._id).update({
         data: curGame
     });
-}
-
-// 下一位
-const nextPlayer = (players, player) => {
-    const index = players.indexOf(player);
-    if (index === 0) {
-        return players[players.length - 1];
-    }
-    return players[index - 1];
 }
 
 // 出牌
@@ -305,14 +311,7 @@ const select_turn_winner = async (userId) => {
 exports.main = async (event, context) => {
     type = event["type"];
     userId = event["userId"];
-    // players = [
-    //     "7258032d6791d0ce01a518c43727f177",
-    //     "c69c6e4c6791d0e101a7e5ad245999cb",
-    //     "11ad50236792662901aeea2b4791c574",
-    //     "a40fc0746792663c051b52307e36f128"
-    // ]
     players = event["players"];
-    console.log("!!!!!", event)
     switch (type) {
         case 1: {
             await deleteGame();

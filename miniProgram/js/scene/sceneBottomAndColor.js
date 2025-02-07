@@ -5,51 +5,54 @@
 const Screen_Width = GameGlobal.canvas.width
 const Screen_Height = GameGlobal.canvas.height
 
-import { cloud_bottomAColor } from "../control/cloudFunc";
-import { createBtn } from "../View/btn";
+import {
+	cloud_bottomAColor
+} from "../control/cloudFunc";
+import {
+	createBtn
+} from "../View/btn";
 import Scene from "./scene";
 import {
-  BottomCard_Top,
+	BottomCard_Top,
 	Btn_Height,
 	Btn_M_Height,
 	Btn_Width,
 } from "../common/Defines";
 import BottomCard from "../View/bottomCard";
-import ColorPicker from "../View/colorPicker";
 import HandCard from "../View/handCard";
-import PlayersIcon from "../View/playerIcon";
 import {
 	cardRanks,
 	drawBg,
 	GameStep,
 	getCurStep,
 	getUserKeyBySeat,
+	isFocuseMy,
+	makeImage,
 	playerName,
 	Seat,
 	showLoading,
 	tipToast
 } from "../common/util";
+import SelectColor from "../View/selectColor";
 
 export default class SceneBottomAColor extends Scene {
 	constructor() {
 		super()
 		this.sceneStep = GameStep.SelecBottomAndColor
 
-		this.playersIcon = new PlayersIcon()
 		this.handCard = new HandCard(this.handleOfClickHand.bind(this))
-		this.colorSelect = new ColorPicker()
-		this.bottomCard = new BottomCard(false, this.handleOfClickBottom.bind(this))
 
-		const x = Screen_Width - Btn_Width - 16
-		const y = BottomCard_Top - 16 - Btn_Height
-		this.confirmBtn = createBtn(x, y, "确认埋底", this.handleOfClickConfirm.bind(this))
+		this.bottomCard = new BottomCard(false, this.handleOfClickBottom.bind(this))
+		this.confirmBtn = null
+		this.colorPicker = new SelectColor()
+		this.waitImage = null
 	}
 
 	handleOfClickConfirm() {
 		this.confirmBtn.select = false
 		// 判断是否选了主色
-		const color = this.colorSelect.getCurColor()
-		if (color <= 0) {
+		const color = this.colorPicker.getCurSelectColor()
+		if (!color) {
 			tipToast('没有选主色')
 			return
 		}
@@ -63,6 +66,8 @@ export default class SceneBottomAColor extends Scene {
 	}
 
 	handleOfClickBottom(cardId) {
+		if (!this.isFocuse) return
+
 		let bottomCardIds = this.bottomCard.getCardIds()
 		const index = bottomCardIds.indexOf(cardId)
 		// 处理底牌
@@ -76,12 +81,16 @@ export default class SceneBottomAColor extends Scene {
 	}
 
 	handleOfClickHand(cardIds) {
+		if (!this.isFocuse) return
+
 		let handCardIds = this.handCard.getCardIds()
 		const clickCardId = cardIds[0]
 		// 处理底牌
 		let bottomCardIds = this.bottomCard.getCardIds()
 		if (bottomCardIds.length >= 8) {
-			wx.showToast({ title: '超了超了'})
+			wx.showToast({
+				title: '超了超了'
+			})
 			return
 		}
 		bottomCardIds.push(clickCardId)
@@ -91,7 +100,6 @@ export default class SceneBottomAColor extends Scene {
 		const index = handCardIds.indexOf(clickCardId)
 		handCardIds.splice(index, 1)
 		this.handCard.update(handCardIds)
-		
 	}
 
 	updateScene() {
@@ -99,31 +107,48 @@ export default class SceneBottomAColor extends Scene {
 		this.bottomCard.remove()
 
 		if (this.needUpdate) {
-			this.playersIcon.update()
-
 			const userKey = getUserKeyBySeat(Seat.Down)
 			const cardIds = GameGlobal.databus.gameInfo[userKey].handCards
 			const handCards = cardRanks(cardIds)
 			this.handCard.update(handCards)
 
-			const bottomCard = GameGlobal.databus.gameInfo.bottomStartCards
-			this.bottomCard.update(bottomCard)
+			if (this.isFocuse) {
+				this.waitImage = null
+				this.colorPicker.display(true)
+
+				const x = Screen_Width - Btn_Width - 16
+				const y = BottomCard_Top - 16 - Btn_Height
+				this.confirmBtn = createBtn(x, y, "确认埋底", this.handleOfClickConfirm.bind(this))
+
+				const bottomCard = GameGlobal.databus.gameInfo.bottomStartCards
+				this.bottomCard.update(bottomCard)
+			} else {
+				this.waitImage = makeImage("selectBottom")
+				this.colorPicker.display(false)
+				this.confirmBtn = null
+				this.bottomCard.update([])
+			}
 		}
 	}
 
 	renderScene(ctx) {
-		this.playersIcon.render(ctx)
 		this.handCard.render(ctx)
-		this.colorSelect.render(ctx)
 		this.bottomCard.render(ctx)
-		this.confirmBtn.render(ctx)
+		this.confirmBtn && this.confirmBtn.render(ctx)
+		this.colorPicker.render(ctx)
+
+		if (this.waitImage) {
+			const width = 200
+			const x = Screen_Width / 2 - width / 2
+			const y = Screen_Height / 2 - width
+			ctx.drawImage(this.waitImage, x, y, width, width)
+		}
 	}
 
 	handleOfSceneClick(x, y) {
-		this.colorSelect.handleOfClick(x, y)
 		this.bottomCard.handleOfClick(x, y)
 		this.handCard.handleOfClick(x, y)
-		this.confirmBtn.handleOfClick(x, y)
+		this.confirmBtn && this.confirmBtn.handleOfClick(x, y)
 	}
 
 	getTipStrs() {

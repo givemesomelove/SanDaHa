@@ -16,6 +16,7 @@ import {
 } from "../control/cloudFunc";
 import BigIcon from "../View/bigIcon";
 import { createBtn } from "../View/btn";
+import Item from "../View/item";
 
 import Scene from "./scene"
 
@@ -25,8 +26,8 @@ export default class SceneReady extends Scene {
 		this.bgImage = makeImage("sceneBg_2")
 		this.sceneStep = GameStep.Ready
 		
-		this.icons = this.initHeadIcon()
-	}
+        this.icons = this.initHeadIcon()
+    }
 
 	initHeadIcon() {
 		let icons = []
@@ -224,7 +225,7 @@ export default class SceneReady extends Scene {
 
 	renderScene(ctx) {
 		renderItems(this.icons, ctx)
-		renderItems(this.btns, ctx)
+        renderItems(this.btns, ctx)
 	}
 
 	handleOfSceneClick(x, y) {

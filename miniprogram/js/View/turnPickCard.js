@@ -5,7 +5,7 @@
 import { createCard } from "./card";
 import { BottomCard_Top, Card_Height, HeadHeight, LeftCard_Top, MyCard_Top, MyHead_Top, Name_CenterY, RightCard_Top, RightHead_Top, TopCard_Top } from "../common/Defines";
 import SectionCard from "./lineCard1";
-import { getUserKeyBySeat, Seat } from "../common/util";
+import { getHandCardBySeat, getUserKeyBySeat, Seat } from "../common/util";
 
 export default class TurnPickCard {
 	constructor() {
@@ -42,21 +42,39 @@ export default class TurnPickCard {
 	update() {
 		if (!GameGlobal.databus.gameInfo) return
 
+		const gameInfo = GameGlobal.databus.gameInfo
+
 		const downKeys = getUserKeyBySeat(Seat.Down)
-		const downCardIds = databus.gameInfo[downKeys].turnCards
+		const downCardIds = gameInfo[downKeys].turnCards
 		this.bottomCards.update(downCardIds)
 		
 		const leftKeys = getUserKeyBySeat(Seat.Left)
-		const leftCardIds = databus.gameInfo[leftKeys].turnCards
+		const leftCardIds = gameInfo[leftKeys].turnCards
 		this.leftCards.update(leftCardIds)
 
 		const topKeys = getUserKeyBySeat(Seat.Up)
-		const topCardIds = databus.gameInfo[topKeys].turnCards
+		const topCardIds = gameInfo[topKeys].turnCards
 		this.topCards.update(topCardIds)
 
 		const rightKeys = getUserKeyBySeat(Seat.Right)
-		const rightCardIds = databus.gameInfo[rightKeys].turnCards
+		const rightCardIds = gameInfo[rightKeys].turnCards
 		this.rightCards.update(rightCardIds)
+	}
+
+	updateTurn(index) {
+		if (!GameGlobal.databus.gameInfo) return
+
+		const bottomHand = getHandCardBySeat(Seat.Down, index)
+		this.bottomCards.update(bottomHand)
+
+		const leftHand = getHandCardBySeat(Seat.Left, index)
+		this.leftCards.update(leftHand)
+
+		const topHand = getHandCardBySeat(Seat.Up, index)
+		this.topCards.update(topHand)
+
+		const rightHand = getHandCardBySeat(Seat.Right, index)
+		this.rightCards.update(rightHand)
 	}
 
 	render(ctx) {

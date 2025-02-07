@@ -1,4 +1,4 @@
-const { getUserKeyBySeat, Seat } = require("../common/util");
+const { getUserKeyBySeat, Seat, isFocuseMy } = require("../common/util");
 
 // 调用云函数
 const cloudFunc = ({
@@ -132,6 +132,8 @@ exports.cloud_randPlayers = (players) => {
 
 // 叫分选庄
 exports.cloud_callScore = (userId, score) => {
+    if (!isFocuseMy()) return
+
 	const data = {
 		"type": 4,
 		"userId": userId,

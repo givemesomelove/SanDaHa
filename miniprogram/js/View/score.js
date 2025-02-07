@@ -1,4 +1,4 @@
-import { bigHeadImg, GameStep, isFocuseMy, isPointInFrame, makeImage, playerName } from "../common/util";
+import { bigHeadImg, drawRoundRect, GameStep, isFocuseMy, isPointInFrame, makeImage, playerName } from "../common/util";
 import { cloud_callScore } from "../control/cloudFunc";
 import { createLab } from "./lab";
 
@@ -45,7 +45,7 @@ export default class Score {
 	}
 
 	handleOfClickScore() {
-		if (!isFocuseMy() || !this.enable) return 
+		if (!this.enable) return 
 
 		cloud_callScore(GameGlobal.databus.userId, this.num)
 	}

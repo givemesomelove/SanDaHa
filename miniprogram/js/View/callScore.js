@@ -42,17 +42,23 @@ export default class CallScore {
 			this.imgs[index] = bigHeadImg(item)
 			this.ons[index] = isUserCallScore(item)
 		})
-		
+        
 		const focuseId = GameGlobal.databus.gameInfo.focusPlayer
 		this.focuse = players.indexOf(focuseId)
 
-		const maxUser = curMaxCallScore()
-		if (maxUser) {
-			const maxScore = GameGlobal.databus.gameInfo.callScore["maxUser"]
-			const curIndex = (80 - maxScore) / 5
+        const cur = curMaxCallScore()
+		if (cur) {
+            const score = cur[0]
+            const userId = cur[1]
+			const curIndex = (80 - score) / 5
 			this.btns.forEach((item, index) => {
-				const enable = curIndex < index
-				item.config(maxUser, enable)
+                if (curIndex == index) {
+                    item.config(userId, false)
+                } else if (curIndex < index) {
+                    item.config(null, true)
+                } else {
+                    item.config(null, false)
+                }
 			})
 		} else {
 			this.btns.forEach(item => {
