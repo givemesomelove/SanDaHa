@@ -13,21 +13,29 @@ export const Btn_M_Wdith = 75
 export const Btn_M_Height = 37.5
 
 // 默认功能栏frame
-export const menuFrame = wx.getMenuButtonBoundingClientRect()
-// export const menuFrame = {}
-// menuFrame.left = 292
-// menuFrame.top = 44
-// menuFrame.right = 380
-// menuFrame.bottom = 76
+// export const menuFrame = wx.getMenuButtonBoundingClientRect()
+export const menuFrame = {}
+menuFrame.left = 292
+menuFrame.top = 44
+menuFrame.right = 380
+menuFrame.bottom = 76
+
+// 屏幕尺寸
+export const Screen_Width = GameGlobal.canvas.width
+export const Screen_Height = GameGlobal.canvas.height
 
 // 底部手牌区域的顶点
-export const HandCard_Top = () => {
-	return GameGlobal.canvas.height - 34 - 5 * (Card_Height + 5) + 5
-}
+export const HandCard_Top = Screen_Height - 34 - 5 * (Card_Height + 5) + 5
+
 // 出牌按钮位置
-export const PickBtn_Top = HandCard_Top() - 16 - Btn_Height
+export const PickBtn_Top = HandCard_Top - 16 - Btn_Height
+
+export const TurnShow_Top = menuFrame.bottom + 16
+
+export const TurnShow_Bottom = PickBtn_Top - 8
+
 // 底牌位置
-export const BottomCard_Top = HandCard_Top() - 16 - Card_Height
+export const BottomCard_Top = HandCard_Top - 16 - Card_Height
 
 // 小间距
 const M_Spacing = 8

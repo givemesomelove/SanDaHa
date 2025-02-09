@@ -3,7 +3,7 @@
 */
 
 import { Btn_Height, Btn_Width } from "../common/Defines";
-import { getCurPickTurn } from "../common/util";
+import { getCurTurnCount } from "../common/util";
 import { createBtn } from "./btn";
 import Button from "./Button";
 import ModalBg from "./modalBg";
@@ -41,8 +41,8 @@ export default class LookTurnCard extends ModalBg {
 		this.lastBtn.setActive(active)
 		this.nextBtn.setActive(active)
 		if (active) {
-			this.maxTurns = getCurPickTurn()
-			this.curTurn = getCurPickTurn()
+			this.maxTurns = getCurTurnCount() 
+			this.curTurn = getCurTurnCount()
 			this.turnCards.updateTurn(this.curTurn)	
 		}
 	}

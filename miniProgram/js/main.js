@@ -1,11 +1,11 @@
 import Prepare from "./prepare"
 import { renderItems, updateItems } from "./common/util"
-import SceneReady from "./scene/sceneReady"
-import SceneCallScore from "./scene/sceneCallScore"
-import SceneBottomAColor from "./scene/sceneBottomAndColor"
-import ScenePickCard from "./scene/scenePickCard"
-import SceneSelectWin from "./scene/sceneSelectWin"
-import SceneEnd from "./scene/sceneEnd"
+import SceneRoom from "./scene/sceneRoom";
+import SceneScore from "./scene/sceneScore";
+import SceneBottomAColor from "./scene/sceneBottomAColor";
+import ScenePickCards from "./scene/scenePickCards";
+import SceneWinner from "./scene/sceneWinner";
+import SceneEnd from "./scene/sceneOver";
 
 /**
  * 游戏主函数
@@ -31,13 +31,13 @@ export default class Main {
 
     // 初始化场景
     initScene() {
-        this.readyScene = new SceneReady()
-        this.callScoreScene = new SceneCallScore()
-        this.bottomAndColorScene = new SceneBottomAColor()
-        this.pickCardScene = new ScenePickCard()
-        this.selectWinScene = new SceneSelectWin()
-        this.endScene = new SceneEnd()
-        this.scenes = [this.readyScene, this.callScoreScene, this.bottomAndColorScene, this.pickCardScene, this.selectWinScene, this.endScene]
+		this.roomScene = new SceneRoom()
+		this.scoreScene = new SceneScore()
+		this.bottomScene = new SceneBottomAColor()
+		this.pickScene = new ScenePickCards()
+		this.winnerScene = new SceneWinner()
+		this.endScene = new SceneEnd()
+        this.scenes = [this.roomScene, this.scoreScene, this.bottomScene, this.pickScene, this.winnerScene, this.endScene]
     }
 
     /**

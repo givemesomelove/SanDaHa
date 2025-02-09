@@ -14,8 +14,24 @@ export const Seat = Object.freeze({
 	Right: 'Right',
 });
 
+export const RankColor = Object.freeze({
+	Main: '主色',
+	Hearts: '红桃副',
+	Spades: '黑桃副',
+	Diamonds: '方片副',
+	Clubs: '梅花副',
+});
+
+export const PickError = Object.freeze({
+	Right: '选择正确',
+	OtherPick: '没轮到自己出牌',
+	mutiPick: '甩牌错误',
+	numPick: '出牌数量不对',
+	mutiDifferent: '不能甩不同颜色的牌',
+});
+
 // 根据方位获取用户id
-export const getUserId = seat => {
+export const getUserIdBySeat = seat => {
 	const gameInfo = GameGlobal.databus.gameInfo
 	const curUserId = GameGlobal.databus.userId
 	let index = gameInfo.turnPlayers.indexOf(curUserId)
@@ -31,7 +47,7 @@ export const getUserId = seat => {
 }
 
 // 根据用户id获取用户key
-export const getUserKey = userId => {
+export const getUserKeyById = userId => {
 	if (!GameGlobal.databus.gameInfo) return null
 
 	const players = GameGlobal.databus.gameInfo.turnPlayers
@@ -41,8 +57,8 @@ export const getUserKey = userId => {
 
 // 根据用户方位获取用户key
 export const getUserKeyBySeat = seat => {
-	const userId = getUserId(seat)
-	const userKey = getUserKey(userId)
+	const userId = getUserIdBySeat(seat)
+	const userKey = getUserKeyById(userId)
 	return userKey
 }
 
@@ -57,8 +73,27 @@ export const makeImage = name => {
 	return img
 }
 
-export const headImage = seat => {
-	const userId = getUserId(seat)
+// 根据方位获取小头像图片
+export const headImageBySeat = seat => {
+	const userId = getUserIdBySeat(seat)
+	const name = playerName(userId)
+	let imageName = ""
+	if (name == "谭别") {
+		imageName = "tan"
+	} else if (name == "西瓜别") {
+		imageName = "gua"
+	} else if (name == "鸟别") {
+		imageName = "niao"
+	} else if (name == "徐别") {
+		imageName = "xu"
+	} else if (name == "虎别") {
+		imageName = "hu"
+	}
+	return makeImage(imageName)
+}
+
+// 根据id获取小头像图片
+export const headImageById = userId => {
 	const name = playerName(userId)
 	let imageName = ""
 	if (name == "谭别") {
@@ -135,7 +170,7 @@ export const playerNames = userIds => {
 	return players.slice(0, -1);
 }
 
-// 根据用户id获取用户名字
+// 根据用户名获取id
 export const userIdByName = name => {
 	if (!GameGlobal.allPlayers) return null;
 
@@ -243,6 +278,32 @@ export const cardRanks = cardIds => {
 	return results
 }
 
+// 获取卡牌连对的下一个id
+export const cardRankNext = cardId => {
+	const ranks = GameGlobal.databus.ranks
+
+	const mainColor = GameGlobal.databus.gameInfo.mainColor
+	const noMainColor = mainColor >= 5 || mainColor == 0
+
+	let index = ranks.indexOf(cardId);
+	if (index < 10) {
+		if (noMainColor) {
+			index = index == 9 ? null : index + 1
+		} else {
+			index += 1
+		}
+	} else if (index >= 10 && index < 18) {
+		index = index == 17 ? null : index + 1
+	} else if (index >= 18 && index < 26) {
+		index = index == 25 ? null : index + 1
+	} else if (index >= 26 && index < 34) {
+		index = index == 33 ? null : index + 1
+	} else {
+		index = index == 41 ? null : index + 1
+	}
+	return ranks[index]
+}
+
 // 卡牌列表是否相同
 export const isCardsUpdate = (cardIds1, cardIds2) => {
 	if (!cardIds1 && !cardIds2) return false
@@ -276,11 +337,11 @@ export const renderItems = (items, ctx) => {
 	})
 }
 
-export const clickItems = (items, x, y) => {
+export const clickItems = (items, e) => {
 	if (!items || items.length == 0) return
 
 	items.forEach(item => {
-		item && item.handleOfClick(x, y)
+		item && item.handleOfClick(e)
 	})
 }
 
@@ -314,6 +375,25 @@ export const isGMMy = () => {
 
 	const userName = playerName(GameGlobal.databus.userId)
 	return userName == "虎别"
+}
+
+// 玩家是庄家吗
+export const isPlayerEnemy = userId => {
+	const game = GameGlobal.databus.gameInfo
+	if (!game) return false
+	return userId == game.enemyPlayer
+}
+
+// 玩家是否赢了
+export const isPlayerWin = userId => {
+	const game = GameGlobal.databus.gameInfo
+	if (!game) return false
+
+	const isEnemy = isPlayerEnemy(userId)
+	const enmeyWin = game.curScore < game.targetScore
+	if (isEnemy && enmeyWin) return true
+	if (!isEnemy && !enmeyWin) return true
+	return false
 }
 
 // 获取主色编号对应字符串
@@ -381,10 +461,11 @@ export const randomPlayers = (array) => {
 
 // 点是否在Rect中
 export const isPointInFrame = (curX, curY, x, y, width, height) => {
-	return (curX > x &&
+	const isPointIn = (curX > x &&
 		curX < x + width &&
 		curY > y &&
 		curY < y + height)
+	return isPointIn
 }
 
 // 绘制圆角矩形
@@ -430,7 +511,7 @@ export const drawRoundedRectBorder = (ctx, x, y, width, height, radius, borderCo
 }
 
 // 根据userId获取大头像
-export const bigHeadImg = userId => {
+export const bigHeadImgById = userId => {
 	const name = playerName(userId)
 	if (name == "谭别") {
 		return makeImage("tan_big")
@@ -445,7 +526,7 @@ export const bigHeadImg = userId => {
 	}
 }
 
-export const userColor = userId => {
+export const userColorById = userId => {
 	const name = playerName(userId)
 	if (name == "谭别") {
 		return '#f0bcbc'
@@ -475,30 +556,140 @@ export const curMaxCallScore = () => {
 	return !curScore || !caller ? null : [curScore, caller]
 }
 
-export const getHandCardBySeat = (seat, index) => {
+// 根据用户id获取手牌等信息
+export const getPlayInfoById = userId => {
 	const gameInfo = GameGlobal.databus.gameInfo
-	if (!gameInfo) return []
-	const key = getUserKeyBySeat(seat)
-	const turnsCards = gameInfo[key].turnsCards
-	if (turnsCards.length <= index) return []
+	if (!gameInfo) return null
+	const userKey = getUserKeyById(userId)
+	const handInfo = gameInfo[userKey]
+	return handInfo
+}
+
+// 根据座位获取手牌信息
+export const getPlayInfoBySeat = seat => {
+	const userId = getUserIdBySeat(seat)
+	const handInfo = getPlayInfoById(userId)
+	return handInfo
+}
+
+// 获取某一轮的出牌
+export const getTurnCardBySeat = (seat, index) => {
+	const handInfo = getPlayInfoBySeat(seat)
+	if (!handInfo) return []
+	const turnsCards = handInfo.turnsCards
+	if (!turnsCards || turnsCards.length <= index) return []
 	return turnsCards[index]
 }
 
-export const getCurPickTurn = () => {
+// 获取当前出牌轮次
+export const getCurTurnCount = () => {
 	const gameInfo = GameGlobal.databus.gameInfo
 	if (!gameInfo) return null
-	let count = 0
 
-	const turns1 = gameInfo.player1info.turnsCards.length
+	let count = 0
+	let isNeedAdd = true
+
+	const turns1 = gameInfo.player1Info.turnsCards.length
+	if (gameInfo.player1Info.turnCards.length > 0) {
+		isNeedAdd = false
+	}
 	count = count < turns1 ? turns1 : count
 
-	const turns2 = gameInfo.player2info.turnsCards.length
+	const turns2 = gameInfo.player2Info.turnsCards.length
+	if (gameInfo.player2Info.turnCards.length > 0) {
+		isNeedAdd = false
+	}
 	count = count < turns2 ? turns2 : count
 
-	const turns3 = gameInfo.player3info.turnsCards.length
+	const turns3 = gameInfo.player3Info.turnsCards.length
+	if (gameInfo.player3Info.turnCards.length > 0) {
+		isNeedAdd = false
+	}
 	count = count < turns3 ? turns3 : count
-	
-	const turns4 = gameInfo.player4info.turnsCards.length
+
+	const turns4 = gameInfo.player4Info.turnsCards.length
+	if (gameInfo.player4Info.turnCards.length > 0) {
+		isNeedAdd = false
+	}
 	count = count < turns4 ? turns4 : count
+	count = isNeedAdd ? count + 1 : count
 	return count
+}
+
+// 根据位置获取当前手牌
+export const getCurTurnCardsBySeat = seat => {
+	const gameInfo = GameGlobal.databus.gameInfo
+	if (!gameInfo) return []
+	const key = getUserKeyBySeat(seat)
+	const cardIds = gameInfo[key].handCards
+	const handCards = cardRanks(cardIds)
+	return handCards
+}
+
+// 根据位置获取当前出牌
+export const getCurTurnPickBySeat = seat => {
+	const gameInfo = GameGlobal.databus.gameInfo
+	if (!gameInfo) return []
+	const key = getUserKeyBySeat(seat)
+	const cardIds = gameInfo[key].turnCards
+	const turnPicks = cardRanks(cardIds)
+	return turnPicks
+}
+
+// 获取本轮我得手牌
+export const getMyHandCard = () => {
+	return getCurTurnCardsBySeat(Seat.Down)
+}
+
+// 获取本局我得起始手牌
+export const getAllMyHandCard = () => {
+	const handInfo = getPlayInfoBySeat(Seat.Down)
+	if (!handInfo) return []
+
+	const cardIds = handInfo.startCards
+	const handCards = cardRanks(cardIds)
+	return handCards
+}
+
+// 顺时针、逆时针旋转图片90度
+export const rotateImage = (image, clockwise) => {
+	const {
+		width: w,
+		height: h
+	} = image
+	const canvas = wx.createCanvas()
+	canvas.width = h
+	canvas.height = w
+	const ctx = canvas.getContext('2d')
+	ctx.save()
+
+	if (clockwise) {
+		ctx.translate(h, 0)
+		ctx.rotate(Math.PI / 2)
+	} else {
+		ctx.translate(0, w);
+		ctx.rotate(-Math.PI / 2);
+	}
+
+	ctx.drawImage(image, 0, 0, w, h)
+	ctx.restore()
+	return canvas
+}
+
+// 获取第一个出牌玩家的出牌
+export const getFirstTurnPick = () => {
+	const seats = [Seat.Right, Seat.Up, Seat.Left]
+	seats.forEach(item => {
+		const turnCard = getCurTurnPickBySeat(item)
+		if (turnCard && turnCard.length > 0) {
+			return turnCard
+		}
+	})
+	return []
+}
+
+// 我是最后一个出牌吗
+export const isMyLastPick = () => {
+	const cards = getCurTurnPickBySeat(Seat.Right)
+	return cards && cards.length > 0
 }

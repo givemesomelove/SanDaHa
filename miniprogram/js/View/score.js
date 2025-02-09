@@ -1,4 +1,4 @@
-import { bigHeadImg, drawRoundRect, GameStep, isFocuseMy, isPointInFrame, makeImage, playerName } from "../common/util";
+import { bigHeadImgById, drawRoundRect, GameStep, isFocuseMy, isPointInFrame, makeImage, playerName } from "../common/util";
 import { cloud_callScore } from "../control/cloudFunc";
 import { createLab } from "./lab";
 
@@ -22,7 +22,7 @@ export default class Score {
 		this.headImg = null
 		this.userId = userId
 		if (userId) {
-			this.headImg = bigHeadImg(userId)
+			this.headImg = bigHeadImgById(userId)
 		}
 		this.enable = enable
 	}

@@ -184,53 +184,6 @@ const select_bottomAndColor = async (cards, userKey, color) => {
     });
 }
 
-// 出牌
-const pick_card = async (cards, userKey, userId) => {
-    // 判断玩家本轮是否都出完了,都出完了返回修改后的game，没有出完返回空
-    const checkTurn = (game) => {
-        player1 = game["player1Info"]["turnCards"];
-        if (player1.length == 0) {
-            return false;
-        }
-        player2 = game["player2Info"]["turnCards"];
-        if (player2.length == 0) {
-            return false;
-        }
-        player3 = game["player3Info"]["turnCards"];
-        if (player3.length == 0) {
-            return false;
-        }
-        player4 = game["player4Info"]["turnCards"];
-        if (player4.length == 0) {
-            return false;
-        }
-        return true;
-    }
-
-    const gameResult = await db.collection('game').limit(1).get();
-    const gameData = gameResult.data[0];
-    // 玩家出牌
-    const player = gameData[userKey];
-    const turnsCards = player["turnsCards"];
-    turnsCards.push(cards);
-    player["turnsCards"] = turnsCards;
-    player["turnCards"] = cards;
-    const handCards = player["handCards"];
-    player["handCards"] = handCards.filter(card => !cards.includes(card));
-
-    const curGame = {};
-    curGame[userKey] = player;
-    curGame["focusPlayer"] = nextPlayer(gameData["turnPlayers"], userId);
-    // 是否出牌结束
-    gameData[userKey] = player;
-    if (checkTurn(gameData)) {
-        curGame["step"] = 4;
-    }
-    await db.collection('game').doc(gameData._id).update({
-        data: curGame
-    });
-}
-
 // 选谁最大
 const select_turn_winner = async (userId) => {
     const cardList = await db.collection('card').get();
@@ -305,6 +258,55 @@ const select_turn_winner = async (userId) => {
     });
 }
 
+// 出牌
+const pick_card = async (cards, userKey, userId, winner) => {
+    // 判断玩家本轮是否都出完了,都出完了返回修改后的game，没有出完返回空
+    const checkTurn = (game) => {
+        player1 = game["player1Info"]["turnCards"];
+        if (player1.length == 0) {
+            return false;
+        }
+        player2 = game["player2Info"]["turnCards"];
+        if (player2.length == 0) {
+            return false;
+        }
+        player3 = game["player3Info"]["turnCards"];
+        if (player3.length == 0) {
+            return false;
+        }
+        player4 = game["player4Info"]["turnCards"];
+        if (player4.length == 0) {
+            return false;
+        }
+        return true;
+    }
+
+    const gameResult = await db.collection('game').limit(1).get();
+    const gameData = gameResult.data[0];
+    // 玩家出牌
+    const player = gameData[userKey];
+    const turnsCards = player["turnsCards"];
+    turnsCards.push(cards);
+    player["turnsCards"] = turnsCards;
+    player["turnCards"] = cards;
+    const handCards = player["handCards"];
+    player["handCards"] = handCards.filter(card => !cards.includes(card));
+
+	select_turn_winner(winner)
+
+	// const curGame = {};
+    // curGame[userKey] = player;
+	// curGame["focusPlayer"] = nextPlayer(gameData["turnPlayers"], userId);
+    // // 是否出牌结束
+    // gameData[userKey] = player;
+    // if (checkTurn(gameData)) {
+    //     curGame["step"] = 4;
+    // }
+    // await db.collection('game').doc(gameData._id).update({
+    //     data: curGame
+	// });
+}
+
 
 // 云函数入口函数:
 // 1删除上局游戏; 2洗牌结果; 3准备结束; 4玩家叫分; 5庄家埋底; 6选主色; 7开始出牌; 8选谁大; 9算分; 10结束; 11刷新玩家手牌; 12庄家看底; 13刷新主色; 14刷新分数; 15清空当前出牌
@@ -340,8 +342,9 @@ exports.main = async (event, context) => {
         }
         case 6: {
             const cards = event["cards"];
-            userKey = event["userKey"];
-            await pick_card(cards, userKey, userId);
+			userKey = event["userKey"];
+			const winner = event["winner"];
+            await pick_card(cards, userKey, userId, winner);
             break;
         }
         case 7: {

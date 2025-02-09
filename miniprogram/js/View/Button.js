@@ -14,6 +14,8 @@ export default class Button extends Item {
 		this.height = Btn_Height
 		this.text = text
 		this.textColor = 'white'
-		this.selectBlock = clickBlock
+        this.selectBlock = clickBlock
+        this.active = true
+        this.enable = true
 	}
 }

@@ -15,7 +15,6 @@ GameGlobal.databus = new DataBus();
 // 全局音乐管理
 // GameGlobal.musicManager = new Music();
 
-
 export default class Prepare {
 	constructor(roomChangedBlock, gameChangedBlock) {
 		this.gameChangedBlock = gameChangedBlock

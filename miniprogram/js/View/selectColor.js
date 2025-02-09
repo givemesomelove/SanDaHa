@@ -3,37 +3,50 @@
     选择本局主色
  */
 
-import { menuFrame } from "../common/Defines";
-import { makeImage, renderItems } from "../common/util";
+import { menuFrame, Screen_Width } from "../common/Defines";
+import { makeImage } from "../common/util";
 import Item from "./item";
 
-const Screen_Width = GameGlobal.canvas.width
-
 class ColorCard extends Item {
-    constructor(index, selectBlock) {
+    constructor(x, y, index, selectBlock) {
         super()
         this.width = 70
         this.height = this.width / 2 * 3
-        this.x = Screen_Width / 2 - (2.5 - index) * this.width
-        this.y = menuFrame.bottom + 100
+        this.x = x + index * this.width
+        this.y = y
         this.image = makeImage(`color_big_${index+1}`)
         this.selectBlock = selectBlock
         this.showMask = true
-        this.setActive(false)
+		this.active = true
+		this.enable = true
     }
 }
 
-export default class SelectColor {
+export default class SelectColor extends Item {
     constructor() {
-        this.selectIndex = null
-        this.items = []
+		super()
+
+		this.x = (Screen_Width - 5 * 70) / 2
+		this.y = menuFrame.bottom + 100
+		this.width = 5 * 70
+		this.height = 70 / 2 * 3
+
+		this.items = this.initColorCards()
+		this.active = true
+		this.enable = true
+		this.updateSubItems()
+	}
+	
+	initColorCards() {
+		let items = []
         for (let i = 0; i < 5; i ++) {
-            const item = new ColorCard(i, () => {
+            const item = new ColorCard(this.x, this.y, i, () => {
                 this.handleOfClickIndex(i)
             })
-            this.items.push(item)
-        }
-    }
+            items.push(item)
+		}
+		return items
+	}
 
     handleOfClickIndex(index) {
         this.selectIndex = index
@@ -48,13 +61,9 @@ export default class SelectColor {
         } else {
             return null
         }
-    }
-
-    render(ctx) {
-        renderItems(this.items, ctx)
-    }
-
-    display(show) {
-        this.items.forEach(item => item.setActive(show))
-    }
+	}
+	
+	render(ctx) {
+		super.render(ctx)
+	}
 }

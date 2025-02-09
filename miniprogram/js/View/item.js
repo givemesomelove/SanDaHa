@@ -4,7 +4,7 @@
             标题、背景色
 */
 
-import { drawRoundedRectBorder, drawRoundRect, isPointInFrame } from "../common/util"
+import { clickItems, drawRoundedRectBorder, drawRoundRect, isPointInFrame, renderItems, updateItems } from "../common/util"
 
 export default class Item {
     constructor() {
@@ -15,7 +15,7 @@ export default class Item {
         this.image = null
         this.selectBlock = null
         // 是否响应点击事件
-        this.enable = true
+        this.enable = false
         // 是否展示边框
         this.showBorder = false
         this.borderColor = 'red'
@@ -29,43 +29,52 @@ export default class Item {
         this.textHeight = 16
         // 背景色
         this.bgColor = null
-
-        // 是否激活
+        // 是否激活(既决定了显示，同时决定了点击事件)
         this.active = false
+
+        this.subItems = []
     }
 
-    setActive(active) {
-        this.active = active
+    // 添加点击事件
+    initEvent() {
+        wx.offTouchEnd(this.handleOfClick.bind(this))
+        wx.onTouchEnd(this.handleOfClick.bind(this))
+    }
 
-        if (active) {
-            wx.offTouchEnd(this.handleOfClck.bind(this))
-            wx.onTouchEnd(this.handleOfClck.bind(this))
-        } else {
-            wx.offTouchEnd(this.handleOfClck.bind(this))
-        }
+    removeEvent() {
+        wx.offTouchEnd(this.handleOfClick.bind(this))
     }
 
     isClicked(x, y) {
         return isPointInFrame(x, y, this.x, this.y, this.width, this.height)
     }
 
-    handleOfClck(e) {
+    handleOfClick(e) {
         const {
             clientX: x,
             clientY: y
         } = e.changedTouches[0];
 
-        if (!this.enable) return
+        if (!this.enable || !this.active) return
         if (!this.isClicked(x, y)) return
-        if (!this.selectBlock) return
+
+        // 传递点击事件至所有子节点
+        clickItems(this.subItems, e)
+
         if (GameGlobal.itemEventBlocked) return
-
+        if (!this.selectBlock) return
+        // 响应自身点击事件
         this.selectBlock(x, y)
-
+        // 保留点击一次只响应一个事件
         GameGlobal.itemEventBlocked = true
         setTimeout(() => {
             GameGlobal.itemEventBlocked = false
-        }, 500)
+        }, 400)
+    }
+
+    update() {
+        if (!this.active) return
+        updateItems(this.subItems)
     }
 
     render(ctx) {
@@ -86,7 +95,7 @@ export default class Item {
             ctx.fillStyle = this.textColor
             const width = ctx.measureText(this.text).width
             const x = this.x + (this.width - width) / 2
-            const y = this.y + (this.height - 16) / 2
+            const y = this.y + (this.height - 16) / 2 + 10
             ctx.fillText(this.text, x, y)
         }
 
@@ -99,5 +108,29 @@ export default class Item {
         if (this.showBorder) {
             drawRoundedRectBorder(ctx, this.x, this.y, this.width, this.height, 0, this.borderColor)
         }
+
+        // 加载所有子元素
+        renderItems(this.subItems, ctx)
+    }
+
+    // 刷新当前子item
+    updateSubItems() {
+        let items = []
+        for (const key in this) {
+            if (!this.hasOwnProperty(key)) continue;
+            // 直接子元素
+            if (this[key] instanceof Item) {
+                items.push(this[key])
+            }
+            // 集合元素
+            if (Array.isArray(this[key]) && key != "subItems") {
+                this[key].forEach(item => {
+                    if (item instanceof Item) {
+                        items.push(item)
+                    }
+                })
+            }
+        }
+        this.subItems = items
     }
 }
