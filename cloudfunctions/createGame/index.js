@@ -8,6 +8,42 @@ cloud.init({
 }) // 使用当前云环境
 const db = cloud.database();
 
+// 获取当前进行中的游戏信息
+const db_getCurGame = async () => {
+    const games = await db.collection('game').get();
+    if (games.data && games.data.length > 0) {
+        return games.data[0]
+    }
+    return null
+}
+
+// 获取所有卡牌列表
+const db_getCardList = async () => {
+    const cardData = await db.collection('card').get();
+    if (cardData.data && cardData.data.length > 0) {
+        return cardData.data
+    }
+    return null
+}
+
+// 删除上把游戏
+const deleteGame = async () => {
+    const game = await db_getCurGame()
+    if (!game) {
+        return '当前不存在游戏'
+    }
+
+    try {
+        await db.collection('game').where({
+            "_id": db.command.neq("0")
+        }).remove()
+        return ''
+    } catch (err) {
+        console.error(err)
+        return '删除发生了错误'
+    }
+}
+
 // 下一位
 const nextPlayer = (players, player) => {
     const index = players.indexOf(player);
@@ -15,18 +51,6 @@ const nextPlayer = (players, player) => {
         return players[players.length - 1];
     }
     return players[index - 1];
-}
-
-// 删除上把游戏
-const deleteGame = async () => {
-    console.log("删除")
-    try {
-        await db.collection('game').where({
-            "_id": db.command.neq("0")
-        }).remove();
-    } catch (err) {
-        console.error(err);
-    }
 }
 
 // 洗牌、接拍、发牌
@@ -46,7 +70,6 @@ const washCard = async () => {
     const cards = await db.collection('card').where({
         num: db.command.nin([3, 4, 6])
     }).get();
-    console.log(cards)
     // 获取cardid列表
     let cur_cards = cards["data"].map(card => card["id"])
     // 变成两副牌
@@ -55,9 +78,6 @@ const washCard = async () => {
     cur_cards = shuffleArray(cur_cards);
     return cur_cards
 }
-
-// 给扑克牌排序
-
 
 // 准备完毕
 const game_ready = async (players) => {
@@ -107,7 +127,7 @@ const game_ready = async (players) => {
     // gameData["callScore"] = null
     // gameData["curCaller"] = null
     gameData["callPlayers"] = players
-    
+
     await db.collection('game').add({
         data: gameData
     });
@@ -115,25 +135,29 @@ const game_ready = async (players) => {
 
 // 玩家叫分
 const call_score = async (userId, score) => {
-    const gameResult = await db.collection('game').limit(1).get();
-    const gameData = gameResult.data[0];
+    const game = await db_getCurGame()
+    if (!game) return '游戏不存在'
+    // 当前是否是这个玩家叫分
+    if (game.focusPlayer != userId) {
+        return '没轮到你叫分'
+    }
 
     if (score == 0) {
         // 0表示不要了
         const curGame = {}
-        let players = gameData.callPlayers.filter(item => item != userId)
-        curGame["callers"] = players
-        if (players.count == 1) {
+        let players = game.callPlayers.filter(item => item != userId)
+        curGame["callPlayers"] = players
+        if (players.length == 1) {
             const winner = players[0]
             curGame["enemyPlayer"] = winner;
-            curGame["targetScore"] = curGame["callScore"];
+            curGame["targetScore"] = game["callScore"];
             curGame["step"] = 2;
             curGame["focusPlayer"] = winner;
         } else {
-            const next = nextPlayer(players, userId)
+            const next = nextPlayer(game.callPlayers, userId)
             curGame["focusPlayer"] = next
         }
-        await db.collection('game').doc(gameData._id).update({
+        await db.collection('game').doc(game._id).update({
             data: curGame
         });
     } else if (score == 5) {
@@ -147,164 +171,134 @@ const call_score = async (userId, score) => {
         curGame["enemyPlayer"] = userId
         curGame["step"] = 2
         curGame["focusPlayer"] = userId;
-        await db.collection('game').doc(gameData._id).update({
+        await db.collection('game').doc(game._id).update({
             data: curGame
         });
     } else {
         const curGame = {}
         curGame["callScore"] = score
         curGame["curCaller"] = userId
-        const next = nextPlayer(gameData.callPlayers, userId)
+        const next = nextPlayer(game.callPlayers, userId)
         curGame["focusPlayer"] = next;
-        await db.collection('game').doc(gameData._id).update({
+        await db.collection('game').doc(game._id).update({
             data: curGame
         });
     }
+    return ''
 }
 
 // 庄家埋地，选主色
 const select_bottomAndColor = async (cards, userKey, color) => {
-    const gameResult = await db.collection('game').limit(1).get();
-    const gameData = gameResult.data[0];
+    const game = await db_getCurGame()
+    if (!game) return '当前不存在游戏'
+    // 当前是否是这个玩家操作
+    const userId = game[userKey].playerId
+    if (game.focusPlayer != userId) {
+        return '没轮到你'
+    }
+
     // 换底牌
-    const bottomStartCards = gameData["bottomStartCards"];
-    const player = gameData[userKey];
-    const playerStartCards = player["startCards"];
+    const bottomStartCards = game.bottomStartCards;
+    const player = game[userKey];
+    const playerStartCards = player.startCards;
     let handCards = playerStartCards.concat(bottomStartCards)
     handCards = handCards.filter(card => !cards.includes(card));
-    player["handCards"] = handCards;
+    player.handCards = handCards;
 
     const curGame = {};
-    curGame["step"] = 3;
+    curGame.step = 3
     curGame[userKey] = player;
-    curGame["bottomEndCards"] = cards;
-    curGame["mainColor"] = color;
-    await db.collection('game').doc(gameData._id).update({
+    curGame.bottomEndCards = cards
+    curGame.mainColor = color
+    await db.collection('game').doc(game._id).update({
         data: curGame
     });
+    return ''
 }
 
 // 选谁最大
-const select_turn_winner = async (userId) => {
-    const cardList = await db.collection('card').get();
+const select_turn_winner = async (game, winner, bottomScale) => {
+    const cardList = await db_getCardList()
+
     // 计算当前牌的总分数
     const sumScore = (cards) => {
         let score = 0;
-        for (const cardId of cards) {
-            const card = cardList.data.find(item => item.id == cardId)
-            if (card["num"] == 5 || card["num"] == 10) {
-                score = score + card["num"];
-            } else if (card["num"] == 13) {
-                score = score + 10;
+        cards.forEach(cardId => {
+            const card = cardList.find(item => item.id == cardId)
+            if (card.num == 5 || card.num == 10) {
+                score += card.num
+            } else if (card.num == 13) {
+                score += 10
             }
-        }
+        })
         return score;
     }
 
-    // 判断当前玩家是否要算分数
-    const isPlayerWin = (player, winner, enemy) => {
-        const isEnemyWin = winner == enemy;
-        if (player["playerId"] == userId) {
-            return true;
-        }
-
-        if (!isEnemyWin && player["playerId"] != enemy) {
-            return true;
-        }
-        return false;
-    }
-
-    const gameResult = await db.collection('game').limit(1).get();
-    const gameData = gameResult.data[0];
     // 算分
     let score = 0;
-    const isPlayer1Win = isPlayerWin(gameData["player1Info"], userId, gameData["enemy"]);
-    if (isPlayerWin) {
-        score += sumScore(gameData["player1Info"]["turnCards"])
+    const isEnemyWin = game.enemyPlayer == winner
+    if (!isEnemyWin) {
+        score += sumScore(game.player1Info.turnCards)
+        score += sumScore(game.player2Info.turnCards)
+        score += sumScore(game.player3Info.turnCards)
+        score += sumScore(game.player4Info.turnCards)
     }
-    const isPlayer2Win = isPlayerWin(gameData["player2Info"], userId, gameData["enemy"]);
-    if (isPlayerWin) {
-        score += sumScore(gameData["player2Info"]["turnCards"])
+
+    // 底牌分倍数
+    if (bottomScale > 0) {
+        score += bottomScale * sumScore(game.bottomEndCards)
     }
-    const isPlayer3Win = isPlayerWin(gameData["player3Info"], userId, gameData["enemy"]);
-    if (isPlayerWin) {
-        score += sumScore(gameData["player3Info"]["turnCards"])
-    }
-    const isPlayer4Win = isPlayerWin(gameData["player4Info"], userId, gameData["enemy"]);
-    if (isPlayerWin) {
-        score += sumScore(gameData["player4Info"]["turnCards"])
-    }
-    gameData["curScore"] += score;
+    game.curScore += score;
 
     // 改变游戏状态
-    if (gameData.player1Info.handCards.length == 0) {
-        gameData["step"] = 6;
+    if (game.player1Info.handCards.length == 0) {
+        game.step = 6;
     } else {
         // 换玩家
-        gameData["focusPlayer"] = userId;
-        gameData["step"] = 3;
+        game.focusPlayer = winner
+        game.step = 3;
 
         // 清空所有玩家本轮出牌
-        gameData["player1Info"]["turnCards"] = [];
-        gameData["player2Info"]["turnCards"] = [];
-        gameData["player3Info"]["turnCards"] = [];
-        gameData["player4Info"]["turnCards"] = [];
+        game.player1Info.turnCards = []
+        game.player2Info.turnCards = []
+        game.player3Info.turnCards = []
+        game.player4Info.turnCards = []
     }
-
-    const did = gameData._id
-    delete gameData._id
-    await db.collection('game').doc(did).update({
-        data: gameData
-    });
+    return game
 }
 
 // 出牌
-const pick_card = async (cards, userKey, userId, winner) => {
-    // 判断玩家本轮是否都出完了,都出完了返回修改后的game，没有出完返回空
-    const checkTurn = (game) => {
-        player1 = game["player1Info"]["turnCards"];
-        if (player1.length == 0) {
-            return false;
+const pick_card = async (cards, userKey, userId, winner, bottomScale) => {
+    let game = await db_getCurGame()
+    if (!game) return '游戏不存在'
+
+    if (game.focusPlayer != userId) {
+        return '没轮到你'
+    }
+    
+    // 玩家出牌
+    let player = game[userKey];
+    player.turnsCards.push(cards)
+    player.turnCards = cards;
+    // 剩余手牌
+    cards.forEach(item => {
+        const index = player.handCards.findIndex(card => card == item)
+        if (index != -1) {
+            player.handCards.splice(index, 1)
         }
-        player2 = game["player2Info"]["turnCards"];
-        if (player2.length == 0) {
-            return false;
-        }
-        player3 = game["player3Info"]["turnCards"];
-        if (player3.length == 0) {
-            return false;
-        }
-        player4 = game["player4Info"]["turnCards"];
-        if (player4.length == 0) {
-            return false;
-        }
-        return true;
+    })
+
+    if (winner) {
+        game = await select_turn_winner(game, winner, bottomScale)
+    } else {
+        game.focusPlayer = nextPlayer(game.turnPlayers, userId)
     }
 
-    const gameResult = await db.collection('game').limit(1).get();
-    const gameData = gameResult.data[0];
-    // 玩家出牌
-    const player = gameData[userKey];
-    const turnsCards = player["turnsCards"];
-    turnsCards.push(cards);
-    player["turnsCards"] = turnsCards;
-    player["turnCards"] = cards;
-    const handCards = player["handCards"];
-    player["handCards"] = handCards.filter(card => !cards.includes(card));
-
-	select_turn_winner(winner)
-
-	// const curGame = {};
-    // curGame[userKey] = player;
-	// curGame["focusPlayer"] = nextPlayer(gameData["turnPlayers"], userId);
-    // // 是否出牌结束
-    // gameData[userKey] = player;
-    // if (checkTurn(gameData)) {
-    //     curGame["step"] = 4;
-    // }
-    // await db.collection('game').doc(gameData._id).update({
-    //     data: curGame
-	// });
+    const did = game._id
+    delete game._id
+    await db.collection('game').doc(did).update({
+        data: game
+    });
 }
 
 
@@ -314,9 +308,10 @@ exports.main = async (event, context) => {
     type = event["type"];
     userId = event["userId"];
     players = event["players"];
+    let msg = ''
     switch (type) {
         case 1: {
-            await deleteGame();
+            msg = await deleteGame();
             break;
         }
         case 2: {
@@ -341,10 +336,11 @@ exports.main = async (event, context) => {
             break;
         }
         case 6: {
-            const cards = event["cards"];
-			userKey = event["userKey"];
-			const winner = event["winner"];
-            await pick_card(cards, userKey, userId, winner);
+            const cards = event["cards"]
+            userKey = event["userKey"]
+            const winner = event["winner"]
+            const bottomScale = event["bottomScale"]
+            await pick_card(cards, userKey, userId, winner, bottomScale)
             break;
         }
         case 7: {
@@ -353,6 +349,7 @@ exports.main = async (event, context) => {
         }
     }
     return {
-        success: true
+        success: true,
+        msg: msg
     };
 }

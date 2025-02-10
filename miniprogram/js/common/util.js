@@ -25,14 +25,18 @@ export const RankColor = Object.freeze({
 export const PickError = Object.freeze({
 	Right: '选择正确',
 	OtherPick: '没轮到自己出牌',
-	mutiPick: '甩牌错误',
-	numPick: '出牌数量不对',
-	mutiDifferent: '不能甩不同颜色的牌',
+	MutiPick: '甩牌错误',
+	NumPick: '出牌数量不对',
+    MutiDifferent: '不能甩不同颜色的牌',
+    ColorPick: '花色错误',
+    Double: '有对出对',
+    DoubleLength: '连对不够长'
 });
 
 // 根据方位获取用户id
 export const getUserIdBySeat = seat => {
 	const gameInfo = GameGlobal.databus.gameInfo
+	if (!gameInfo) return null
 	const curUserId = GameGlobal.databus.userId
 	let index = gameInfo.turnPlayers.indexOf(curUserId)
 	if (seat == Seat.Left) {
@@ -108,6 +112,14 @@ export const headImageById = userId => {
 		imageName = "hu"
 	}
 	return makeImage(imageName)
+}
+
+export const curColorImage = () => {
+	const game = GameGlobal.databus.gameInfo
+	if (!game) return null
+	const mainColor = game.mainColor
+	if (!mainColor) return null
+	return makeImage(`color_${mainColor}`)
 }
 
 // 防抖，直到0.8秒后执行
@@ -581,41 +593,6 @@ export const getTurnCardBySeat = (seat, index) => {
 	return turnsCards[index]
 }
 
-// 获取当前出牌轮次
-export const getCurTurnCount = () => {
-	const gameInfo = GameGlobal.databus.gameInfo
-	if (!gameInfo) return null
-
-	let count = 0
-	let isNeedAdd = true
-
-	const turns1 = gameInfo.player1Info.turnsCards.length
-	if (gameInfo.player1Info.turnCards.length > 0) {
-		isNeedAdd = false
-	}
-	count = count < turns1 ? turns1 : count
-
-	const turns2 = gameInfo.player2Info.turnsCards.length
-	if (gameInfo.player2Info.turnCards.length > 0) {
-		isNeedAdd = false
-	}
-	count = count < turns2 ? turns2 : count
-
-	const turns3 = gameInfo.player3Info.turnsCards.length
-	if (gameInfo.player3Info.turnCards.length > 0) {
-		isNeedAdd = false
-	}
-	count = count < turns3 ? turns3 : count
-
-	const turns4 = gameInfo.player4Info.turnsCards.length
-	if (gameInfo.player4Info.turnCards.length > 0) {
-		isNeedAdd = false
-	}
-	count = count < turns4 ? turns4 : count
-	count = isNeedAdd ? count + 1 : count
-	return count
-}
-
 // 根据位置获取当前手牌
 export const getCurTurnCardsBySeat = seat => {
 	const gameInfo = GameGlobal.databus.gameInfo
@@ -631,6 +608,8 @@ export const getCurTurnPickBySeat = seat => {
 	const gameInfo = GameGlobal.databus.gameInfo
 	if (!gameInfo) return []
 	const key = getUserKeyBySeat(seat)
+	if (!gameInfo[key]) return []
+	const turnCards = gameInfo[key].turnCards
 	const cardIds = gameInfo[key].turnCards
 	const turnPicks = cardRanks(cardIds)
 	return turnPicks
@@ -678,18 +657,49 @@ export const rotateImage = (image, clockwise) => {
 
 // 获取第一个出牌玩家的出牌
 export const getFirstTurnPick = () => {
-	const seats = [Seat.Right, Seat.Up, Seat.Left]
-	seats.forEach(item => {
-		const turnCard = getCurTurnPickBySeat(item)
+    const seats = [Seat.Right, Seat.Up, Seat.Left]
+    for (const seat of seats) {
+        const turnCard = getCurTurnPickBySeat(seat)
 		if (turnCard && turnCard.length > 0) {
 			return turnCard
 		}
-	})
-	return []
+    }
+    return []
 }
 
 // 我是最后一个出牌吗
 export const isMyLastPick = () => {
 	const cards = getCurTurnPickBySeat(Seat.Right)
 	return cards && cards.length > 0
+}
+
+export const getCurTurnCountBySeat = seat => {
+	const handInfo = getPlayInfoBySeat(seat)
+	if (!handInfo) return null
+    return handInfo.turnsCards.length
+}
+
+// 获取当前出牌轮次
+export const getCurTurnCount = () => {
+	const gameInfo = GameGlobal.databus.gameInfo
+	if (!gameInfo) return null
+
+    let count = Math.max(
+        getCurTurnCountBySeat(Seat.Down), 
+        getCurTurnCountBySeat(Seat.Left),
+        getCurTurnCountBySeat(Seat.Up),
+        getCurTurnCountBySeat(Seat.Right))
+
+	return count
+}
+
+// 获取当前分数的几/几
+export const getScoreStr = () => {
+	const gameInfo = GameGlobal.databus.gameInfo
+	if (!gameInfo) return ""
+
+	const target = gameInfo.targetScore
+	if (!target) return ""
+	const cur = gameInfo.curScore
+	return `${cur}/${target}`
 }

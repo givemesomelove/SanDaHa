@@ -2,11 +2,12 @@
     叫分
 */
 
-import { Btn_Height, Btn_Width, menuFrame, Screen_Width } from "../common/Defines";
+import { Btn_Height, Btn_M_Height, Btn_M_Wdith, Btn_Width, menuFrame, Screen_Width } from "../common/Defines";
 import { bigHeadImgById, curMaxCallScore, headImageBySeat, isFocuseMy, isUserCallScore, makeImage, headImageById } from "../common/util";
 import { cloud_callScore } from "../control/cloudFunc";
 import Button from "./Button";
 import Item from "./item";
+import MiniButton from "./miniButton";
 
 const Item_Width = 75
 
@@ -120,13 +121,13 @@ export default class ScorePicker extends Item {
         this.x = 0
         this.y = menuFrame.bottom + 16
         this.width = Screen_Width
-        this.height = Item_Width + 8 + Item_Width * 4 + Btn_Height
+        this.height = Item_Width + 8 + Item_Width * 4 + Btn_M_Height
 
         this.headImgs = this.initHeadImage()
         this.scoreBtns = this.initScoreBtn()
-        this.stopBtn = new Button(
-            Screen_Width / 2 - Btn_Width,
-            this.y + this.height - Btn_Height,
+        this.stopBtn = new MiniButton(
+            Screen_Width / 2 - Btn_M_Wdith / 2,
+            this.y + this.height - Btn_M_Height,
             "不要了",
             this.handleOfClickStop.bind(this)
         )

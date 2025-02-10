@@ -3,7 +3,7 @@
  */
 
 import { BottomCard_Top, Btn_Height, Btn_Width, HandCard_Top, Screen_Width } from "../common/Defines";
-import { cardRanks, GameStep, isFocuseMy, isMyLastPick, makeImage, PickError, tipToast } from "../common/util";
+import { cardRanks, GameStep, getCurTurnCount, isFocuseMy, isMyLastPick, makeImage, PickError, tipToast } from "../common/util";
 import { cloud_pickCard } from "../control/cloudFunc";
 import { checkPickCard, compareWinner } from "../control/pickCardCheck";
 import BottomCards from "../View/bottomCards";
@@ -11,7 +11,8 @@ import Button from "../View/Button";
 import HandCards from "../View/handCards";
 import PlayerDesk from "../View/playerDesk";
 import TurnCards from "../View/seatCard";
-import Scene from "../View/session";
+import Scene from "../View/scene";
+import MiniButton from "../View/miniButton";
 
  export default class ScenePickCards extends Scene {
 	 constructor() {
@@ -26,7 +27,8 @@ import Scene from "../View/session";
 
 		const x = 16
 		const y = HandCard_Top - 16 - Btn_Height
-		this.confirmBtn = new Button(x, y, "出牌", this.handleOfClickConfirm.bind(this))
+		
+		this.confirmBtn = new MiniButton(x, y, "出牌", this.handleOfClickConfirm.bind(this))
 
 		this.playerDesk = new PlayerDesk()
 
@@ -44,19 +46,20 @@ import Scene from "../View/session";
 		const error = checkPickCard(cardIds)
 		if (error == PickError.Right) {
 			if (isMyLastPick()) {
-				const winner = compareWinner(cardIds)
-				cloud_pickCard(cardIds, winner)
+				const result = compareWinner(cardIds)
+				cloud_pickCard(cardIds, result[0], result[1])
 			} else {
-				cloud_pickCard(cardIds, null)
+				cloud_pickCard(cardIds, null, 0)
 			}
-		} else if (error == PickError) {
+		} else {
 			tipToast(error)
 		}
 	}
 
 	update() {
-		this.confirmBtn.active = isFocuseMy()
-
+        this.confirmBtn.active = isFocuseMy()
+        const curTurn = getCurTurnCount()
+        this.stepLab.text = GameStep.PickCard+`(${curTurn})`
 		super.update()
 	}
  }

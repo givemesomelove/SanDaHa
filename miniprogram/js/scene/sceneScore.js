@@ -5,7 +5,7 @@
 import { GameStep, makeImage } from "../common/util";
 import HandCards from "../View/handCards";
 import ScorePicker from "../View/ScorePicker";
-import Scene from "../View/session";
+import Scene from "../View/scene";
 
 export default class SceneScore extends Scene {
 	constructor() {

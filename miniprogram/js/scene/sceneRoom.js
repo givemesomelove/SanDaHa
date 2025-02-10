@@ -2,7 +2,7 @@ import { Btn_Height, Btn_Width } from "../common/Defines";
 import { GameStep, getLocalUserId, getUserOnline, makeImage, playerName, randomPlayers, showLoading, updateItems, userIdByName } from "../common/util";
 import BigIcon from "../View/bigIcon";
 import Button from "../View/Button";
-import Scene from "../View/session";
+import Scene from "../View/scene";
 
 import { cloud_createRoom, cloud_deleteGame, cloud_deleteRoom, cloud_joinRoom, cloud_outRoom, cloud_randPlayers, cloud_startGame } from "../control/cloudFunc"
 

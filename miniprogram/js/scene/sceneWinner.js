@@ -9,7 +9,7 @@ import Button from "../View/Button"
 import HandCards from "../View/handCards"
 import PlayerDesk from "../View/playerDesk"
 import TurnCards from "../View/seatCard"
-import Scene from "../View/session"
+import Scene from "../View/scene"
 
 export default class SceneWinner extends Scene {
 	constructor() {

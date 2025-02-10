@@ -21,7 +21,7 @@ import BottomCards from "../View/bottomCards"
 import Button from "../View/Button"
 import HandCards from "../View/handCards"
 import SelectColor from "../View/selectColor"
-import Scene from "../View/session"
+import Scene from "../View/scene"
 
 export default class SceneBottomAColor extends Scene {
 	constructor() {

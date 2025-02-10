@@ -1,7 +1,7 @@
 // 出牌展示
 
 import { Card_Height, Card_Width, Screen_Width, TurnShow_Bottom, TurnShow_Top } from "../common/Defines"
-import { getCurTurnCount, getTurnCardBySeat, rotateImage, Seat } from "../common/util"
+import { getCurTurnCount, getCurTurnPickBySeat, getTurnCardBySeat, rotateImage, Seat } from "../common/util"
 import Item from "./item"
 
 class Card extends Item {
@@ -29,6 +29,21 @@ class Card extends Item {
 		}
 
 		this.active = true
+	}
+
+	getIsShowMask() {
+		if (getCurTurnPickBySeat(Seat.Down).length == 0 &&
+		getCurTurnPickBySeat(Seat.Left).length == 0 &&
+		getCurTurnPickBySeat(Seat.Up).length == 0 &&
+		getCurTurnPickBySeat(Seat.Right).length == 0) {
+			return true
+		}
+		return false
+	}
+
+	update() {
+		this.showMask = this.getIsShowMask()
+		super.update()
 	}
 }
 

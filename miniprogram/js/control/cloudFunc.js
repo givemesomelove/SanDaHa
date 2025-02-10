@@ -160,13 +160,14 @@ exports.cloud_bottomAColor = (color, bottomCardIds) => {
 }
 
 // 出牌
-exports.cloud_pickCard = (cardIds, winner) => {
+exports.cloud_pickCard = (cardIds, winner, bottomScale) => {
 	const data = {
 		"type" : 6,
 		"cards" : cardIds, 
 		"userKey" : getUserKeyBySeat(Seat.Down),
 		"userId" : GameGlobal.databus.userId,
-		"winner" : winner
+        "winner" : winner,
+        "bottomScale" : bottomScale
 	}
 	cloudFunc({
 		name: "createGame",

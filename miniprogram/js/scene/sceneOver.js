@@ -17,7 +17,7 @@ import LineCard from "../View/lineCard"
 import PlayerDesk from "../View/playerDesk"
 import PlayerEnd from "../View/playerEnd"
 import TurnCards from "../View/seatCard"
-import Scene from "../View/session"
+import Scene from "../View/scene"
 
 export default class SceneEnd extends Scene {
 	constructor() {

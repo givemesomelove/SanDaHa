@@ -33,7 +33,8 @@ export default class SelectColor extends Item {
 
 		this.items = this.initColorCards()
 		this.active = true
-		this.enable = true
+        this.enable = true
+        this.selectIndex = -1
 		this.updateSubItems()
 	}
 	
@@ -48,7 +49,7 @@ export default class SelectColor extends Item {
 		return items
 	}
 
-    handleOfClickIndex(index) {
+    handleOfClickIndex = index => {
         this.selectIndex = index
         this.items.forEach((item, i) => {
             item.showMask = index != i
@@ -56,7 +57,7 @@ export default class SelectColor extends Item {
     }
 
     getCurSelectColor() {
-        if (this.selectIndex) {
+        if (this.selectIndex != -1) {
             return this.selectIndex + 1
         } else {
             return null
