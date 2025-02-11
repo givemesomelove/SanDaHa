@@ -40,11 +40,6 @@ export default class Prepare {
 		this.startGameWatching(db)
 
 		this.loadExtraImg()
-		
-		GameGlobal.emitter.on('hello', () => {
-			console.log('测试通知')
-		})
-		GameGlobal.emitter.emit('hello')
 	}
 
 	// 读取卡牌列表

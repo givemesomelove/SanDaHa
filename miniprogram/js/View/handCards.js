@@ -112,7 +112,6 @@ export default class HandCards extends Item {
 			this.config(cardIds)
 		} else {
 			// 刷新不改变选定的牌
-
 			const cardIds = getMyHandCard()
 			this.config(cardIds)
 
