@@ -19,14 +19,17 @@ import Item from "./item";
 import LineCard from "./lineCard";
 
 /**
-     * Creates an instance of SceneEnd.
-     * 
-     * @param {Function} [selectBlock=null] - 点击事件回调
-     * @param {boolean} [isShowAll=false] - 是展示所有手牌还是当前手牌
-*/
+ * Creates an instance of SceneEnd.
+ * 
+ * @param {Function} [selectBlock=null] - 点击事件回调
+ * @param {boolean} [isShowAll=false] - 是展示所有手牌还是当前手牌
+ */
 
 export default class HandCards extends Item {
-	constructor({selectBlock = null, isShowAll = false}) {
+	constructor({
+		selectBlock = null,
+		isShowAll = false
+	}) {
 		super()
 
 		this.isShowAll = isShowAll
@@ -41,6 +44,8 @@ export default class HandCards extends Item {
 
 		this.lineCards = this.initLineCards()
 		this.updateSubItems()
+
+		this.selectCards = []
 	}
 
 	initLineCards() {
@@ -80,6 +85,14 @@ export default class HandCards extends Item {
 	}
 
 	config(cardIds) {
+		// 如果卡片列表长度没有变化即认为卡片没有变化，
+		// 那么需要保持卡牌选定状态不变
+		if (cardIds.length != this.getCardIds().length) {
+			this.selectCards = []
+		} else {
+			this.selectCards = this.getSelectCardIds()
+		}
+
 		if (!cardIds || cardIds.length <= 0) {
 			this.lineCards.forEach(item => item.config([]))
 			return
@@ -94,14 +107,18 @@ export default class HandCards extends Item {
 				this.lineCards[i].config(lines[i - (5 - count)])
 			}
 		}
+
+		this.setSelectCard()
 	}
 
 	setSelectCard = () => {
 		this.selectCards.forEach(item => {
 			for (const lineCard of this.lineCards) {
 				const card = lineCard.cards.find(item1 => item1.cardId == item)
-				card.showBorder = true
-				break
+				if (card) {
+					card.showBorder = true
+					break
+				}
 			}
 		})
 	}
