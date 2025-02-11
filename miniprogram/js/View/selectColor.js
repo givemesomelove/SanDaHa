@@ -11,10 +11,10 @@ class ColorCard extends Item {
     constructor(x, y, index, selectBlock) {
         super()
         this.width = 70
-        this.height = this.width / 2 * 3
+        this.height = 70
         this.x = x + index * this.width
         this.y = y
-        this.image = makeImage(`color_big_${index+1}`)
+        this.image = makeImage(`color_${index+1}`)
         this.selectBlock = selectBlock
         this.showMask = true
 		this.active = true
@@ -29,7 +29,7 @@ export default class SelectColor extends Item {
 		this.x = (Screen_Width - 5 * 70) / 2
 		this.y = menuFrame.bottom + 100
 		this.width = 5 * 70
-		this.height = 70 / 2 * 3
+		this.height = 70
 
 		this.items = this.initColorCards()
 		this.active = true

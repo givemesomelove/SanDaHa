@@ -290,32 +290,6 @@ export const cardRanks = cardIds => {
 	return results
 }
 
-// 获取卡牌连对的下一个id
-export const cardRankNext = cardId => {
-	const ranks = GameGlobal.databus.ranks
-
-	const mainColor = GameGlobal.databus.gameInfo.mainColor
-	const noMainColor = mainColor >= 5 || mainColor == 0
-
-	let index = ranks.indexOf(cardId);
-	if (index < 10) {
-		if (noMainColor) {
-			index = index == 9 ? null : index + 1
-		} else {
-			index += 1
-		}
-	} else if (index >= 10 && index < 18) {
-		index = index == 17 ? null : index + 1
-	} else if (index >= 18 && index < 26) {
-		index = index == 25 ? null : index + 1
-	} else if (index >= 26 && index < 34) {
-		index = index == 33 ? null : index + 1
-	} else {
-		index = index == 41 ? null : index + 1
-	}
-	return ranks[index]
-}
-
 // 卡牌列表是否相同
 export const isCardsUpdate = (cardIds1, cardIds2) => {
 	if (!cardIds1 && !cardIds2) return false

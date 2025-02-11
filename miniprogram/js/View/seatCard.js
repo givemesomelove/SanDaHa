@@ -79,6 +79,11 @@ class LineCard extends Item {
 	}
 
 	config(cardIds) {
+        if (!cardIds) {
+            this.cards = []
+            this.updateSubItems()
+            return
+        }
 		const items = []
 
 		let cardWidth = Card_Width

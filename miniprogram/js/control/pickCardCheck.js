@@ -1,5 +1,4 @@
 import {
-	cardRankNext,
 	getCurTurnPickBySeat,
 	getFirstTurnPick,
     getMyHandCard,
@@ -10,11 +9,12 @@ import {
 	RankColor,
 	Seat
 } from "../common/util"
-import MiniButton from "../View/miniButton"
 
-// 获取当前出牌的排位颜色
-export const getRankColor = (split) => {
-	const cardId = split[0]
+/**
+ * 获取当前出牌的排位颜色
+ * @param {*} cardId 卡牌id
+ */
+export const getCardRankColor = cardId => {
 	const ranks = GameGlobal.databus.ranks
 
 	const mainColor = GameGlobal.databus.gameInfo.mainColor
@@ -41,12 +41,23 @@ export const getRankColor = (split) => {
 	return null
 }
 
-export const curCompareRank = (split) => {
+/**
+ * 获取堆的排位颜色
+ * @param {*} split 牌堆
+ */ 
+export const getSplitRankColor = split => {
+    return getCardRankColor(split[0])
+}
+
+/**
+ * 根据第一个出牌堆花色、本轮主色计算排位表
+ * @param {*} rankColor 第一个出牌色
+ */
+export const getCurCompareRank = rankColor => {
 	const mainColor = GameGlobal.databus.gameInfo.mainColor
 	const noMainColor = mainColor == 0 || mainColor == 5
-	const rankColor = getRankColor(split)
 	let rank = {}
-	let index = 0
+	let index = 1
 	// 大小王
 	rank[54] = index
 	rank[53] = ++index
@@ -59,8 +70,6 @@ export const curCompareRank = (split) => {
 		// 红桃主
 		rank[7] = ++index
 		rank[20] = rank[33] = rank[46] = ++index
-
-
 		rank[2] = ++index
 		rank[15] = rank[28] = rank[41] = ++index
 	} else if (mainColor == 2) {
@@ -125,27 +134,53 @@ export const curCompareRank = (split) => {
 		const card = cardList.filter(item => item.id == key)
 		values[value] = card[0].name
 	})
-	console.log("得到的排序是:", values)
+    console.log("得到的排序是:", values)
+    
 	return rank
 }
 
-export const compareCard = (card1, card2, compareRank) => {
-	const tmp1 = compareRank[card1]
-	const tmp2 = compareRank[card2]
-
-	if (tmp1 == undefined && tmp2 == undefined) return true
-	if (tmp1 == undefined && tmp2 >= -1) return false
-	if (tmp1 >= -1 && tmp2 == undefined) return true
-	return tmp1 <= tmp2
-}
-
-// 当前我是第一个出牌吗
+/**
+ * 当前我是第一个出牌吗
+ */ 
 export const isMyFirstPick = () => {
 	const cards = getFirstTurnPick()
 	return cards.length == 0
 }
 
-// 获取第一张牌，在堆中的最大连对， 返回最大连对
+/**
+ * 获取卡牌连对的下一个id
+ * @param {*} cardId 卡牌的id
+ */
+export const cardRankNext = cardId => {
+	const ranks = GameGlobal.databus.ranks
+
+	const mainColor = GameGlobal.databus.gameInfo.mainColor
+	const noMainColor = mainColor >= 5 || mainColor == 0
+
+	let index = ranks.indexOf(cardId);
+	if (index < 10) {
+		if (noMainColor) {
+			index = index == 9 ? null : index + 1
+		} else {
+			index += 1
+		}
+	} else if (index >= 10 && index < 18) {
+		index = index == 17 ? null : index + 1
+	} else if (index >= 18 && index < 26) {
+		index = index == 25 ? null : index + 1
+	} else if (index >= 26 && index < 34) {
+		index = index == 33 ? null : index + 1
+	} else {
+		index = index == 41 ? null : index + 1
+	}
+	return ranks[index]
+}
+
+/**
+ * 获取此牌在堆中的最大连对， 返回最大连对
+ * @param {*} cardIds 牌列表
+ * @param {*} card 选定的牌
+ */
 export const pickMaxDouble = (cardIds, card) => {
 	const result = []
 
@@ -168,8 +203,11 @@ export const pickMaxDouble = (cardIds, card) => {
 	return result
 }
 
-// 将牌按照单张或者连对分堆
-export const splitPickCardIds = cardIds => {
+/**
+ * 牌列表做分堆
+ * @param {*} cardIds 牌列表
+ */
+export const splitCards = cardIds => {
 	let cards = cardIds
 	const splits = []
 	while (cards.length > 0) {
@@ -181,67 +219,119 @@ export const splitPickCardIds = cardIds => {
 	return splits
 }
 
-// 判断某张牌是不是全大于另一个堆
-export const isSplitBigSplits = (splits, split, compareRank) => {
-	const cardId = split[0]
-	for (const item of splits) {
-		const tmp = item[0]
-		if (item.length >= split.length &&
-			!compareCard(cardId, tmp, compareRank)) {
-				return false
-		}
-	}
-	return true
+/**
+ * 比较两个堆的大小，先出的堆放前面
+ * @param {*} split1 先出的堆
+ * @param {*} split2 后出的堆
+ * @param {*} rank 排位表
+ */
+export const splitPKSplit = (split1, split2, rank) => {
+    if (split1.length > split2.length) return true
+    const rank1 = rank[split1[0]]
+    const rank2 = rank[split2[0]]
+    if (!rank1 && !rank2) return true
+    if (!rank1 && rank2) return false
+    if (rank1 && !rank2) return true
+    return rank1 <= rank2
 }
 
-export const isSplitsBigSplits = (splits1, splits2) => {
-	for (const split of splits1) {
-		const rankCompare = curCompareRank(split)
-		if (!isSplitBigSplits(splits2, split, rankCompare)) {
-			return false
-		}
-	}
-	return true
+/**
+ * 比较一个堆与多个堆的大小
+ * @param {*} split 先出的堆
+ * @param {*} splits 多堆
+ */
+export const splitPKSplits = (split, splits) => {
+    const rankColor = getSplitRankColor(split)
+    const rank = getCurCompareRank(rankColor)
+    for (const item of splits) {
+        const comp = splitPKSplit(split, item, rank)
+        if (!comp) return false
+    }
+    return true
 }
 
-// 检查多堆的颜色是否相同
-export const checkSplitsSameColor = splits => {
-    let color = null
-    let check = true
+/**
+ * 比较两个多堆的大小
+ * @param {*} splits1 
+ * @param {*} splits2 
+ */
+export const splitsPkSplits = (splits1, splits2) => {
+    for (const split1 of splits1) {
+        const comp = splitPKSplits(split1, splits2)
+        if (!comp) {
+            GameGlobal.pickErrorSplit = split1
+            return false
+        }
+    }
+    return true
+}
+
+/**
+ * 比较两个卡牌列表的大小
+ * @param {*} cardIds1 
+ * @param {*} cardIds2 
+ */
+export const cardIdsPkCardIds = (cardIds1, cardIds2) => {
+    const splits1 = splitCards(cardIds1)
+    const splits2 = splitCards(cardIds2)
+    return splitsPkSplits(splits1, splits2)
+}
+
+/**
+ * 检查多堆的颜色是否相同
+ * @param {*} splits 
+ */
+export const isSplitsSameColor = splits => {
+    let colorSet = new Set()
 	splits.forEach(item => {
-		if (!color) {
-			color = getRankColor(item)
-		} else {
-			if (color != getRankColor(item)) {
-				check = false
-			}
-		}
+        const color = getSplitRankColor(item)
+        colorSet.add(color)
 	})
-	return check
+	return colorSet.size <= 1
 }
 
-// 检测第一个出牌是否合理
+/**
+ * 获取当前牌堆的最长连对
+ * @param {*} splits 
+ * @param {*} rankColor 
+ */
+const getMaxDoubleLength = (splits, rankColor) => {
+    let count = 1
+    splits.forEach(item => {
+        if (rankColor == getSplitRankColor(item) && 
+            item.length > 1 &&
+            item.length > count) {
+                count = item.length / 2
+        }
+    })
+    return count
+}
+
+/**
+ * 检测第一个出牌是否合理
+ * @param {*} cardIds 
+ */
 export const checkFirstPickCard = cardIds => {
 	// 手牌分堆
-	const splits = splitPickCardIds(cardIds)
+	const splits = splitCards(cardIds)
 	if (splits.length <= 1) {
 		// 单张或者连对
 		return PickError.Right
 	} else {
-		if (!checkSplitsSameColor(splits)) {
+		if (!isSplitsSameColor(splits)) {
 			return PickError.MutiDifferent
 		}
 
 		// 甩牌
 		const leftHand = getPlayInfoBySeat(Seat.Left)
-		const leftSplits = splitPickCardIds(leftHand.handCards)
+		const leftSplits = splitCards(leftHand.handCards)
 		const upHand = getPlayInfoBySeat(Seat.Up)
-		const upSplits = splitPickCardIds(upHand.handCards)
+		const upSplits = splitCards(upHand.handCards)
 		const rightHand = getPlayInfoBySeat(Seat.Right)
-		const rightSplits = splitPickCardIds(rightHand.handCards)
+		const rightSplits = splitCards(rightHand.handCards)
 		const otherSplits = [leftSplits, upSplits, rightSplits]
 		for (const otherSplit of otherSplits) {
-			if (!isSplitsBigSplits(splits, otherSplit)) {
+			if (!splitsPkSplits(splits, otherSplit)) {
 				return PickError.MutiPick
 			}
 		}
@@ -249,12 +339,15 @@ export const checkFirstPickCard = cardIds => {
 	}
 }
 
-// 检测非第一个出牌是否合理
+/**
+ * 检测非第一个出牌是否合理
+ * @param {*} cardIds 
+ */
 export const checkFollowPickCard = cardIds => {
     // 获取当前牌堆有多少rankColor的牌
     const rankColorCount = (cardList, rankColor) => {
         return cardList.filter(item => {
-            return rankColor == getRankColor([item])
+            return rankColor == getCardRankColor(item)
         }).length
     }
 
@@ -262,22 +355,9 @@ export const checkFollowPickCard = cardIds => {
     const getDoubleCount = (splits, rankColor) => {
         let count = 0
         splits.forEach(item => {
-            if (rankColor == getRankColor(item) && 
+            if (rankColor == getSplitRankColor(item) && 
                 item.length > 1) {
                     count += item.length / 2
-            }
-        })
-        return count
-    }
-
-    // 获取当前牌堆的最长连对
-    const getMaxDoubleLength = (splits, rankColor) => {
-        let count = 0
-        splits.forEach(item => {
-            if (rankColor == getRankColor(item) && 
-                item.length > 1 &&
-                item.length > count) {
-                    count = item.length / 2
             }
         })
         return count
@@ -291,7 +371,7 @@ export const checkFollowPickCard = cardIds => {
 
 	// 检查出牌花色
     const needCount = firstCards.length
-    const rankColor = getRankColor([firstCards[0]])
+    const rankColor = getCardRankColor(firstCards[0])
     const curCount = rankColorCount(cardIds, rankColor)
     if (curCount < needCount) {
         const handCard = getMyHandCard()
@@ -302,12 +382,12 @@ export const checkFollowPickCard = cardIds => {
     }
 
     // 检查有对出对
-    const firstSplits = splitPickCardIds(firstCards)
+    const firstSplits = splitCards(firstCards)
     const firstDoubleCount = getDoubleCount(firstSplits, rankColor)
-    const curSplits = splitPickCardIds(cardIds)
+    const curSplits = splitCards(cardIds)
     const curDoubleCount = getDoubleCount(curSplits, rankColor)
     const handCard = getMyHandCard()
-    const handSplits = splitPickCardIds(handCard)
+    const handSplits = splitCards(handCard)
     if (curDoubleCount < firstDoubleCount) {
         const handDoubleCount = getDoubleCount(handSplits, rankColor)
         if (handDoubleCount > curDoubleCount) {
@@ -318,7 +398,7 @@ export const checkFollowPickCard = cardIds => {
     // 最大连对
     const firstDoubleLength = getMaxDoubleLength(firstSplits, rankColor)
     const curDoubleLength = getMaxDoubleLength(curSplits, rankColor)
-    if (curDoubleLength > firstDoubleLength) {
+    if (curDoubleLength < firstDoubleLength) {
         const handDoubleLength = getMaxDoubleLength(handSplits, rankColor)
         if (handDoubleLength > curDoubleLength) {
             return PickError.DoubleLength
@@ -327,33 +407,27 @@ export const checkFollowPickCard = cardIds => {
     return PickError.Right
 }
 
-// 检测当前出牌是否合理
+/**
+ * 检测出牌是否合理
+ * @param {*} cardIds 
+ */
 export const checkPickCard = cardIds => {
 	// 当前是否是自己出牌
 	if (!isFocuseMy()) return PickError.OtherPick
 
-	const isFirstPick = isMyFirstPick()
-	if (isFirstPick) {
+	const isFistPick = isMyFirstPick()
+	if (isFistPick) {
 		return checkFirstPickCard(cardIds)
 	} else {
 		return checkFollowPickCard(cardIds)
 	}
 }
 
-// 判断两个玩家出牌大小
-export const copmareTwo = (cards1, cards2, rankCompare) => {
-	const rank1 = rankCompare[cards1[0]]
-    const splits2 = splitPickCardIds(cards2) 
-    if (splits2.length > 1) {
-        return true
-    }
-	const rank2 = rankCompare[cards2[0]]
-	if (!rank2) return true
-
-	return rank1 <= rank2
-}
-
-// 计算扣底倍数:最后一轮，winner不是庄家且是主牌赢时，根据连对计算扣底倍数
+/**
+ * 计算底牌扣底倍数
+ * @param {*} winner 
+ * @param {*} cardIds 
+ */
 const getBottomScale = (winner, cardIds) => {
     // 是否最后一轮
     const playerInfo = getPlayInfoBySeat(Seat.Right)
@@ -362,51 +436,46 @@ const getBottomScale = (winner, cardIds) => {
     const enemy = GameGlobal.databus.gameInfo.enemyPlayer
     if (enemy == winner) return 0
     // 是主牌扣底吗
-    const splits = splitPickCardIds(cardIds)
-    const rankColor = getRankColor(splits[0])
+    const splits = splitCards(cardIds)
+    const rankColor = getSplitRankColor(splits[0])
     if (rankColor != RankColor.Main) return 0
     // 计算扣抵倍数
-    const scale = 0
-    splits.forEach(item => {
-        scale = scale < item.length ? item.length : scale
-    })
+    const scale = getMaxDoubleLength(splits, rankColor)
     return scale
 }
 
 // 判断大小(最后出牌人判断,返回赢家id)
 export const compareWinner = cardIds => {
+    let winner = null
+    let curCards = null
 	// 第一个出牌是甩牌，那么直接获胜
 	const firstPickCard = getFirstTurnPick()
-	const firstSplits = splitPickCardIds(firstPickCard)
+	const firstSplits = splitCards(firstPickCard)
 	if (firstSplits.length > 1) {
-		const userId = getUserIdBySeat(Seat.down)
-		const scale = getBottomScale(winner, cardIds)
-		return [userId, scale]
-	}
+        winner = getUserIdBySeat(Seat.Right)
+        curCards = firstPickCard
+	} else {
+        // 第一个出牌
+        winner = getUserIdBySeat(Seat.Right)
 
-	const cards1 = getCurTurnPickBySeat(Seat.Right)
-	const rankCompare = curCompareRank([cards1[0]])
-	// 第一个出牌与第二个比
-	const right = cards1
-	const up = getCurTurnPickBySeat(Seat.Up)
-	const left = getCurTurnPickBySeat(Seat.Left)
-	const down = cardIds
-
-	let winner = getUserIdBySeat(Seat.Right)
-	let curCards = right
-	if (!copmareTwo(curCards, up, rankCompare)) {
-		winner = getUserIdBySeat(Seat.Up)
-		curCards = up
-	}
-	if (!copmareTwo(curCards, left, rankCompare)) {
-		winner = getUserIdBySeat(Seat.Left)
-		curCards = left
-	}
-	if (!copmareTwo(curCards, down, rankCompare)) {
-		winner = getUserIdBySeat(Seat.Down)
-		curCards = down
+        curCards = getCurTurnPickBySeat(Seat.Right)
+        const up = getCurTurnPickBySeat(Seat.Up)
+	    const left = getCurTurnPickBySeat(Seat.Left)
+        const down = cardIds
+        if (!cardIdsPkCardIds(curCards, up)) {
+            winner = getUserIdBySeat(Seat.Up)
+            curCards = up
+        }
+        if (!cardIdsPkCardIds(curCards, left)) {
+            winner = getUserIdBySeat(Seat.Left)
+            curCards = left
+        }
+        if (!cardIdsPkCardIds(curCards, down)) {
+            winner = getUserIdBySeat(Seat.Down)
+            curCards = down
+        }
     }
-    // 最后一轮，winner不是庄家且是主牌赢时，根据连对计算扣底倍数
+
     const scale = getBottomScale(winner, curCards)
 	return [winner, scale]
 }

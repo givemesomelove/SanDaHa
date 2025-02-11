@@ -1,5 +1,6 @@
 import Pool from './base/pool';
 import DataBus from './control/databus';
+import tinyemitter from './libs/tinyemitter';
 
 GameGlobal.imgs = {}
 
@@ -11,6 +12,9 @@ GameGlobal.pool = new Pool();
 
 // 全局数据管理，用于管理游戏状态和数据
 GameGlobal.databus = new DataBus();
+
+// 全局发送监听指挥部
+GameGlobal.emitter = new tinyemitter()
 
 // 全局音乐管理
 // GameGlobal.musicManager = new Music();
@@ -36,6 +40,11 @@ export default class Prepare {
 		this.startGameWatching(db)
 
 		this.loadExtraImg()
+		
+		GameGlobal.emitter.on('hello', () => {
+			console.log('测试通知')
+		})
+		GameGlobal.emitter.emit('hello')
 	}
 
 	// 读取卡牌列表

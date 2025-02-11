@@ -2,11 +2,14 @@
     首页房间的玩家大图家背景条
  */
 
-import { Screen_Height, Screen_Width } from "../common/Defines"
+import { HeadHeight, Screen_Height, Screen_Width } from "../common/Defines"
 import { bigHeadImgById, playerName, userColorById } from "../common/util"
 import Item from "./item"
 
 const ItemHeight = 100
+
+const Head_Width = 164
+const Head_Height = 92
 
 class PlayerView extends Item {
     constructor(y, index) {
@@ -45,7 +48,7 @@ class PlayerView extends Item {
         super.render(ctx)
 
         if (this.playerImage) {
-            ctx.drawImage(this.playerImage, this.x, this.y, this.height, this.height)
+            ctx.drawImage(this.playerImage, this.x, this.y, Head_Width, Head_Height)
         }
     }
 }

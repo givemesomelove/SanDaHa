@@ -2,7 +2,7 @@
     叫分
 */
 
-import { Btn_Height, Btn_M_Height, Btn_M_Wdith, Btn_Width, menuFrame, Screen_Width } from "../common/Defines";
+import { Btn_Height, Btn_M_Height, Btn_M_Wdith, Btn_Width, HeadHeight, menuFrame, Screen_Width } from "../common/Defines";
 import { bigHeadImgById, curMaxCallScore, headImageBySeat, isFocuseMy, isUserCallScore, makeImage, headImageById } from "../common/util";
 import { cloud_callScore } from "../control/cloudFunc";
 import Button from "./Button";
@@ -11,15 +11,18 @@ import MiniButton from "./miniButton";
 
 const Item_Width = 75
 
+const Head_Width = 82
+const Head_Height = 46
+
 class HeadImage extends Item {
     constructor(index, y) {
         super()
         this.index = index
 
-        this.x = Screen_Width / 2 + Item_Width * (index - 2)
+        this.x = Screen_Width / 2 + Head_Width * (index - 2)
         this.y = y
-        this.width = Item_Width
-        this.height = Item_Width
+        this.width = Head_Width
+        this.height = Head_Height
         this.image = null
 		this.showMask = false
 		this.active = true
@@ -42,9 +45,9 @@ class HeadImage extends Item {
 		super.render(ctx)
 		
 		if (this.playerIcon) {
-			const x = this.x + this.width - 30
-			const y = this.y + this.height - 30
-			ctx.drawImage(this.playerIcon, x, y, 30, 30)
+			const x = this.x + this.width - 20
+			const y = this.y + this.height - 20
+			ctx.drawImage(this.playerIcon, x, y, 20, 20)
 		}
 	}
 }
@@ -59,7 +62,7 @@ class Score extends Item {
         this.num = 80 - index * 5
         this.x = Screen_Width / 2 + (index % 4 - 2) * this.width
         this.y = y + Math.floor(index / 4) * this.width
-        this.image = makeImage("score")
+        this.image = makeImage("score1")
         this.text = `${this.num}`
         this.textColor = 'white'
         this.active = true
@@ -121,7 +124,7 @@ export default class ScorePicker extends Item {
         this.x = 0
         this.y = menuFrame.bottom + 16
         this.width = Screen_Width
-        this.height = Item_Width + 8 + Item_Width * 4 + Btn_M_Height
+        this.height = Head_Height + 8 + Item_Width * 4 + Btn_M_Height
 
         this.headImgs = this.initHeadImage()
         this.scoreBtns = this.initScoreBtn()
@@ -148,7 +151,7 @@ export default class ScorePicker extends Item {
 
     initScoreBtn() {
         const btns = []
-        const y = this.y + Item_Width + 8
+        const y = this.y + Head_Height + 8
         for (let i = 0; i < 16; i++) {
             const btn = new Score(i, y)
             btns.push(btn)

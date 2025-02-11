@@ -27,7 +27,6 @@ import MiniButton from "../View/miniButton";
 
 		const x = 16
 		const y = HandCard_Top - 16 - Btn_Height
-		
 		this.confirmBtn = new MiniButton(x, y, "出牌", this.handleOfClickConfirm.bind(this))
 
 		this.playerDesk = new PlayerDesk()
@@ -51,15 +50,21 @@ import MiniButton from "../View/miniButton";
 			} else {
 				cloud_pickCard(cardIds, null, 0)
 			}
+		} else if (error == PickError.MutiPick) {
+            // 有惩罚的甩牌错误
+            tipToast(error)
+            const cards = GameGlobal.pickErrorSplit
+            cloud_pickCard(cards, null, 0)
 		} else {
-			tipToast(error)
-		}
+            tipToast(error)
+        }
 	}
 
 	update() {
         this.confirmBtn.active = isFocuseMy()
-        const curTurn = getCurTurnCount()
-        this.stepLab.text = GameStep.PickCard+`(${curTurn})`
+		const curTurn = getCurTurnCount()
+		this.stepLab.text = GameStep.PickCard+`(${curTurn})`
 		super.update()
+
 	}
  }

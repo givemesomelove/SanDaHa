@@ -96,13 +96,26 @@ export default class HandCards extends Item {
 		}
 	}
 
+	setSelectCard = () => {
+		this.selectCards.forEach(item => {
+			for (const lineCard of this.lineCards) {
+				const card = lineCard.cards.find(item1 => item1.cardId == item)
+				card.showBorder = true
+				break
+			}
+		})
+	}
+
 	update() {
 		if (this.isShowAll) {
 			const cardIds = getAllMyHandCard()
 			this.config(cardIds)
 		} else {
+			// 刷新不改变选定的牌
+
 			const cardIds = getMyHandCard()
 			this.config(cardIds)
+
 		}
 		super.update()
 	}

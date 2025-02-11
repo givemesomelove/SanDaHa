@@ -12,6 +12,7 @@ import { bigHeadImgById, isEnemyMy, isPlayerEnemy, isPlayerWin, makeImage } from
 import Item from "./item";
 
 const itemWidth = (Screen_Width - 16 * 2) / 4
+const itemHeigth = itemWidth * 46 / 82
 
 class playerView extends Item {
 	constructor(x, y, width, height, index) {
@@ -50,7 +51,7 @@ class playerView extends Item {
 			this.x, 
 			this.y, 
 			this.width, 
-			this.width
+			itemHeigth
 		)
 
 		this.enemyImage && ctx.drawImage(
@@ -64,7 +65,7 @@ class playerView extends Item {
 		this.winImage && ctx.drawImage(
 			this.winImage, 
 			this.x, 
-			this.y + this.width, 
+			this.y + itemHeigth, 
 			this.width, 
 			this.width
 		)
