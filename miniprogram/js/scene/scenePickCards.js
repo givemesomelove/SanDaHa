@@ -3,7 +3,7 @@
  */
 
 import { BottomCard_Top, Btn_Height, Btn_Width, Card_Height, Card_Width, HandCard_Top, Screen_Width, TurnShow_Bottom } from "../common/Defines";
-import { cardRanks, GameStep, getCurTurnCount, isFocuseMy, isMyLastPick, makeImage, PickError, tipToast } from "../common/util";
+import { cardRanks, GameStep, getCurTurnCount, isEnemyMy, isFocuseMy, isMyLastPick, makeImage, PickError, tipToast } from "../common/util";
 import { cloud_pickCard } from "../control/cloudFunc";
 import { checkPickCard, compareWinner } from "../control/pickCardCheck";
 import BottomCards from "../View/bottomCards";
@@ -90,6 +90,7 @@ class BgCard extends Item {
         this.stopBtn.active = isFocuseMy()
 		const curTurn = getCurTurnCount()
 		this.stepLab.text = GameStep.PickCard+`(${curTurn})`
+		this.bgCard.active = isEnemyMy()
 		super.update()
 
 	}

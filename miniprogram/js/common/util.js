@@ -715,3 +715,17 @@ export const isBeforePickCard = () => {
 export const enableItems = (items, enable) => {
 	items.forEach(item => item.enable = enable)
 }
+
+export const isSameCards = (cards1, cards2) => {
+	if (!cards1 || !cards2) return false
+	if (cards1.length != cards2.length) return false
+
+	cards1.sort((a, b) => a > b)
+	cards2.sort((a, b) => a > b)
+	for (let i = 0; i < cards1.length; i++) {
+		if (cards1[i] != cards2[i]) {
+			return false
+		}
+	}
+	return true
+}

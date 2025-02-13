@@ -13,6 +13,7 @@ import {
 	getAllMyHandCard,
 	getHandCardBySeat,
 	getMyHandCard,
+	isSameCards,
 	Seat
 } from "../common/util";
 import Item from "./item";
@@ -87,10 +88,8 @@ export default class HandCards extends Item {
 	config(cardIds) {
 		// 如果卡片列表长度没有变化即认为卡片没有变化，
 		// 那么需要保持卡牌选定状态不变
-		if (cardIds.length != this.getCardIds().length) {
-			this.selectCards = []
-		} else {
-			this.selectCards = this.getSelectCardIds()
+		if (isSameCards(cardIds, this.getCardIds())) {
+			return
 		}
 
 		if (!cardIds || cardIds.length <= 0) {
@@ -107,8 +106,6 @@ export default class HandCards extends Item {
 				this.lineCards[i].config(lines[i - (5 - count)])
 			}
 		}
-
-		this.setSelectCard()
 	}
 
 	setSelectCard = () => {
