@@ -24,13 +24,12 @@ export default class Item {
         this.maskColor = 'rgba(0, 0, 0, 0.5)'
         // 标题默认居中
         this.text = null
-        this.font = '16px Arial'
-        this.textColor = 'black'
-        this.textHeight = 16
+        this.font = 16
+        this.textColor = 'white'
         // 背景色
         this.bgColor = null
         // 是否激活(既决定了显示，同时决定了点击事件)
-        this.active = false
+		this.active = false
 
         this.subItems = []
     }
@@ -86,16 +85,18 @@ export default class Item {
 
         // 画背景图片
         if (this.image) {
-            ctx.drawImage(this.image, this.x, this.y, this.width, this.height)
+			ctx.drawImage(this.image, this.x, this.y, this.width, this.height)
         }
 
         // 文字
         if (this.text) {
-            ctx.font = this.font
-            ctx.fillStyle = this.textColor
+            ctx.font = `${this.font}px Arial`
+			ctx.fillStyle = this.textColor
+			ctx.textBaseline = 'middle'
+
             const width = ctx.measureText(this.text).width
             const x = this.x + (this.width - width) / 2
-            const y = this.y + (this.height - 16) / 2 + 10
+            const y = this.y + this.height / 2
             ctx.fillText(this.text, x, y)
         }
 

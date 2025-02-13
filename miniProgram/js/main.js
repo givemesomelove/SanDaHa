@@ -4,10 +4,12 @@ import SceneRoom from "./scene/sceneRoom";
 import SceneScore from "./scene/sceneScore";
 import SceneBottomAColor from "./scene/sceneBottomAColor";
 import ScenePickCards from "./scene/scenePickCards";
-import SceneWinner from "./scene/sceneWinner";
 import SceneEnd from "./scene/sceneOver";
 import SceneSetting from "./View/sceneSetting";
 import SceneHistory from "./View/sceneHistory"
+import SceneColor from "./View/sceneColor";
+import SceneBottom from "./View/sceneBottom";
+import SceneWatch from "./View/sceneWatch";
 
 /**
  * 游戏主函数
@@ -37,11 +39,15 @@ export default class Main {
 		this.scoreScene = new SceneScore()
 		this.bottomScene = new SceneBottomAColor()
 		this.pickScene = new ScenePickCards()
-		this.winnerScene = new SceneWinner()
         this.endScene = new SceneEnd()
 		GameGlobal.setPage = new SceneSetting()
-		GameGlobal.historyPage = new SceneHistory()
-        this.scenes = [this.roomScene, this.scoreScene, this.bottomScene, this.pickScene, this.winnerScene, this.endScene, GameGlobal.setPage, GameGlobal.historyPage]
+        GameGlobal.historyPage = new SceneHistory()
+		GameGlobal.colorPage = new SceneColor()
+		GameGlobal.bottomPage = new SceneBottom()
+		GameGlobal.watchPage = new SceneWatch()
+		this.scenes = [this.roomScene, this.scoreScene, this.bottomScene, this.pickScene, this.endScene, GameGlobal.setPage, GameGlobal.historyPage, GameGlobal.colorPage, GameGlobal.bottomPage, GameGlobal.watchPage]
+		
+		GameGlobal.pages = [this.roomScene, this.scoreScene, this.bottomScene, this.pickScene, this.endScene]
     }
 
     /**

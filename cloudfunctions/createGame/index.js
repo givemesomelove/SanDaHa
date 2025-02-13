@@ -126,6 +126,7 @@ const game_ready = async (players) => {
 
     // gameData["callScore"] = null
     // gameData["curCaller"] = null
+    gameData["pickDefeat"] = false
     gameData["callPlayers"] = players
 
     await db.collection('game').add({
@@ -216,6 +217,42 @@ const select_bottomAndColor = async (cards, userKey, color) => {
     return ''
 }
 
+// 庄家埋地，选主色
+const select_MainColor = async (userKey, color) => {
+    const game = await db_getCurGame()
+    if (!game) return '当前不存在游戏'
+    // 当前是否是这个玩家操作
+    const userId = game[userKey].playerId
+    if (game.focusPlayer != userId) {
+        return '没轮到你'
+    }
+
+    const curGame = {};
+    curGame.mainColor = color
+    await db.collection('game').doc(game._id).update({
+        data: curGame
+    });
+    return ''
+}
+
+// 庄家投降
+const pickDefeat = async (score) => {
+    if (!score) return ''
+    const game = await db_getCurGame()
+    if (!game) return '当前不存在游戏'
+    
+    const curGame = {};
+    curGame.pickDefeat = true
+    curGame.curScore = score
+    curGame.step = 6
+    curGame.bottomEndCards = game.bottomEndCards
+    curGame.mainColor = 5
+    await db.collection('game').doc(game._id).update({
+        data: curGame
+    });
+    return ''
+}
+
 // 选谁最大
 const select_turn_winner = async (game, winner, bottomScale) => {
     const cardList = await db_getCardList()
@@ -287,6 +324,11 @@ const pick_card = async (cards, userKey, userId, winner, bottomScale) => {
             player.handCards.splice(index, 1)
         }
     })
+    // 修正异常导致同一个玩家一次出两轮牌
+    const tmp = fixTurnsCards(game)
+    if (tmp) {
+        game = tmp
+    }
 
     if (winner) {
         game = await select_turn_winner(game, winner, bottomScale)
@@ -301,6 +343,51 @@ const pick_card = async (cards, userKey, userId, winner, bottomScale) => {
     });
 }
 
+// 修正出牌轮次异常
+const fixTurnsCards = game => {
+    const count1 = game.player1Info.turnsCards.length
+    const count2 = game.player2Info.turnsCards.length
+    const count3 = game.player3Info.turnsCards.length
+    const count4 = game.player4Info.turnsCards.length
+    const max = Math.max(count1, count2, count3, count4)
+    const min = Math.min(count1, count2, count3, count4)
+    if (max - min >= 2) {
+        if (max == count1) {
+            game.player1Info.turnsCards.pop()
+        }
+        if (max == count2) {
+            game.player2Info.turnsCards.pop()
+        }
+        if (max == count3) {
+            game.player3Info.turnsCards.pop()
+        }
+        if (max == count4) {
+            game.player4Info.turnsCards.pop()
+        }
+        return game
+    } else {
+        return null
+    }
+}
+
+// 玩家排序修改
+const db_randPlayers = async (players) => {
+    const roomResult = await db.collection('room').limit(1).get()
+    const roomRecord = roomResult.data[0];
+    // 将当前玩家加入房间
+    await db.collection('room').doc(roomRecord._id).update({
+        data: {
+            "players": players
+        }
+    });
+}
+
+const startNextGame = async (turnPlayers) => {
+	// 删除当前游戏
+	await deleteGame()
+	// 修改座位 
+	await db_randPlayers(turnPlayers)
+}
 
 // 云函数入口函数:
 // 1删除上局游戏; 2洗牌结果; 3准备结束; 4玩家叫分; 5庄家埋底; 6选主色; 7开始出牌; 8选谁大; 9算分; 10结束; 11刷新玩家手牌; 12庄家看底; 13刷新主色; 14刷新分数; 15清空当前出牌
@@ -347,6 +434,22 @@ exports.main = async (event, context) => {
             await select_turn_winner(userId);
             break;
         }
+        case 8: {
+            const color = event["color"];
+            const userKey = event["userKey"]
+			await select_MainColor(userKey, color)
+			break
+        }
+        case 9: {
+            const score = event["score"]
+			await pickDefeat(score)
+			break
+		}
+		case 10: {
+			const turnPlayers = event["turnPlayers"]
+			await startNextGame(turnPlayers)
+			break
+		}
     }
     return {
         success: true,

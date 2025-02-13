@@ -1,4 +1,5 @@
 import {
+    GameStep,
 	getCurTurnPickBySeat,
 	getFirstTurnPick,
     getMyHandCard,
@@ -7,7 +8,8 @@ import {
 	isFocuseMy,
 	PickError,
 	RankColor,
-	Seat
+	Seat,
+	OutGrade
 } from "../common/util"
 
 /**
@@ -478,4 +480,44 @@ export const compareWinner = cardIds => {
 
     const scale = getBottomScale(winner, curCards)
 	return [winner, scale]
+}
+
+// 扔牌算分
+export const getAdmitDefeatScore = () => {
+    const game = GameGlobal.databus.gameInfo
+    const targetScore = game.targetScore
+    if (targetScore >= 55) return 55
+    if (targetScore > 30 && targetScore < 55) return targetScore + 40
+    if (targetScore <= 30) return targetScore + 70
+}
+
+// 计算本局等级
+export const getGameOutGrade = () => {
+	const game = GameGlobal.databus.gameInfo
+	if (!game) return null
+
+	const curScore = game.curScore
+	const targetScore = game.targetScore
+	// 庄家赢了
+	if (curScore < targetScore) {
+		if (curScore == 0) {
+			return OutGrade.win1
+		} else if (curScore < 30) {
+			return OutGrade.win2
+		}
+		return OutGrade.win3
+	} else {
+		if (curScore < targetScore + 40) {
+			return OutGrade.lose1
+		} else if (curScore < targetScore + 70) {
+			return OutGrade.lose2
+		} else if (curScore < targetScore + 120) {
+			return OutGrade.lose3
+		} else if (curScore < targetScore + 150) {
+			return OutGrade.lose4
+		} else if (curScore < targetScore + 200) {
+			return OutGrade.lose5
+		}
+		return OutGrade.lose6
+	}
 }

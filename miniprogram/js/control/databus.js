@@ -1,5 +1,3 @@
-import Pool from '../base/pool';
-
 let instance;
 
 /**
@@ -21,7 +19,7 @@ export default class DataBus {
         // 当前排序策略
         this.ranks = this.getRanks(1);
 
-        this.loginBlock = null
+		this.loginBlock = null
     }
 
     // 游戏数据变化
@@ -98,5 +96,42 @@ export default class DataBus {
             ranks = ranks.concat(cardClubs)
         }
         return ranks
-    }
+	}
+	
+	startWatchMode = () => {
+		if (!this.roomPlayers || !this.userId) return
+		const players = this.roomPlayers
+		if (players.includes(this.userId) || players.length < 4) {
+			return false
+		}
+
+		// 开始观战
+		this.userId = this.roomPlayers[0]
+		this.updateGameData(this.gameInfo)
+		this.loginBlock && this.loginBlock()
+		return true
+	}
+
+	exitWatchMode = () => {
+		// 缓存用户名
+		this.userId = wx.getStorageSync('userId')
+		this.updateGameData(this.gameInfo)
+		this.loginBlock && this.loginBlock()
+	}
+
+	watchNext = () => {
+		let index = this.roomPlayers.findIndex(item => item == this.userId)
+		index = index == 3 ? 0 : index + 1
+		this.userId = this.roomPlayers[index]
+		this.updateGameData(this.gameInfo)
+        this.loginBlock && this.loginBlock()
+	}
+
+	watchLast = () => {
+		let index = this.roomPlayers.findIndex(item => item == this.userId)
+		index = index == 0 ? 3 : index - 1
+		this.userId = this.roomPlayers[index]
+		this.updateGameData(this.gameInfo)
+        this.loginBlock && this.loginBlock()
+	}
 }

@@ -16,18 +16,18 @@ import {
 	makeImage,
 	tipToast
 } from "../common/util"
-import { cloud_bottomAColor } from "../control/cloudFunc"
+import { cloud_AdmitDefeat, cloud_bottomAColor, cloud_SelectColor } from "../control/cloudFunc"
 import BottomCards from "../View/bottomCards"
 import Button from "../View/Button"
 import HandCards from "../View/handCards"
 import SelectColor from "../View/selectColor"
 import Scene from "../View/scene"
+import { getAdmitDefeatScore } from "../control/pickCardCheck"
 
 export default class SceneBottomAColor extends Scene {
 	constructor() {
 		super()
 
-		this.image = makeImage("sceneBg_1")
 		this.step = GameStep.SelecBottomAndColor
 		this.stepLab.text = GameStep.SelecBottomAndColor
 
@@ -41,6 +41,7 @@ export default class SceneBottomAColor extends Scene {
 		const x = Screen_Width - 16 - Btn_Width
 		const y = BottomCard_Top - 16 - Btn_Height
 		this.confirmBtn = new Button(x, y, "确认埋底", this.handleOfClickConfirm.bind(this))
+        this.defeatBtn = new Button(x - 8 - Btn_Width, y, "扔牌", this.handleOfClickDefeat.bind(this)) 
 
 		this.waitImage = null
 		this.updateSubItems()
@@ -61,7 +62,19 @@ export default class SceneBottomAColor extends Scene {
 			return
 		}
 		cloud_bottomAColor(color, cardIds)
-	}
+    }
+    
+    handleOfClickDefeat = () => {
+        wx.showModal({
+          title: '确认扔牌吗？',
+          complete: (res) => {
+            if (res.confirm) {
+                const score = getAdmitDefeatScore()
+                cloud_AdmitDefeat(score)
+            }
+          }
+        })
+    }
 
 	handleOfClickBottom(index) {
 		if (!isFocuseMy()) return
@@ -104,12 +117,14 @@ export default class SceneBottomAColor extends Scene {
 	update() {
 		if (isFocuseMy()) {
 			this.waitImage = null
-			this.confirmBtn.active = true
+            this.confirmBtn.active = true
+            this.defeatBtn.active = true
 			this.bottomCard.active = true
-			this.colorPicker.active = true
+            this.colorPicker.active = true
 		} else {
 			this.waitImage = makeImage("selectBottom")
-			this.confirmBtn.active = false
+            this.confirmBtn.active = false
+            this.defeatBtn.active = false
 			this.bottomCard.active = false
 			this.colorPicker.active = false
 		}

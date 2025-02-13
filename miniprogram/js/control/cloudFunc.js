@@ -159,6 +159,31 @@ exports.cloud_bottomAColor = (color, bottomCardIds) => {
 	})
 }
 
+// 庄家修改主色
+exports.cloud_SelectColor = (color) => {
+	const data = {
+		"type" : 8,
+		"userKey" : getUserKeyBySeat(Seat.Down),
+		"color" : color
+	}
+	cloudFunc({
+		name: "createGame",
+		data: data
+	})
+}
+
+// 庄家认输
+exports.cloud_AdmitDefeat = score => {
+    const data = {
+		"type" : 9,
+		"score" : score
+	}
+	cloudFunc({
+		name: "createGame",
+		data: data
+	})
+}
+
 // 出牌
 exports.cloud_pickCard = (cardIds, winner, bottomScale) => {
 	const data = {
@@ -180,6 +205,17 @@ exports.cloud_pickWin = userId => {
 	const data = {
 		"type" : 7,
 		"userId" : userId
+	}
+	cloudFunc({
+		name: "createGame",
+		data: data
+	})
+}
+
+exports.cloud_nextGame = turnPlayers => {
+	const data = {
+		"type" : 10,
+		"turnPlayers" : turnPlayers
 	}
 	cloudFunc({
 		name: "createGame",

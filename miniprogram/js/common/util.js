@@ -33,6 +33,18 @@ export const PickError = Object.freeze({
     DoubleLength: '连对不够长'
 });
 
+export const OutGrade = Object.freeze({
+	win1: '奶奶牌',
+	win2: '小光',
+	win3: '过庄',
+	lose1: '跨庄',
+	lose2: '小道',
+	lose3: '大道',
+	lose4: '巨道',
+	lose5: '狂道',
+	lose6: '庄家是猪'
+});
+
 // 根据方位获取用户id
 export const getUserIdBySeat = seat => {
 	const gameInfo = GameGlobal.databus.gameInfo
@@ -237,6 +249,19 @@ export const getCurStep = () => {
 	return GameStep.Ready
 }
 
+// 获取牌堆激动数
+export const getEverMainCards = cardIds => {
+	const ranks = GameGlobal.databus.ranks
+	const res = []
+	for (const card of cardIds) {
+		const index = ranks.indexOf(card);
+		if (index < 10) {
+			res.push(card)
+		}
+	}
+	return res
+}
+
 // 手牌按颜色分堆
 export const cardSplits = (cards) => {
 	const ranks = GameGlobal.databus.ranks
@@ -360,7 +385,7 @@ export const isGMMy = () => {
 	if (!GameGlobal.databus.userId) return false
 
 	const userName = playerName(GameGlobal.databus.userId)
-	return userName == "虎别"
+	return userName == "虎别" || userName == '西瓜别'
 }
 
 // 玩家是庄家吗
@@ -676,4 +701,17 @@ export const getScoreStr = () => {
 	if (!target) return ""
 	const cur = gameInfo.curScore
 	return `${cur}/${target}`
+}
+
+export const isBeforePickCard = () => {
+    const game = GameGlobal.databus.gameInfo
+    if (!game) return false
+
+    const enemyId = game.enemyPlayer
+    const hand = getPlayInfoById(enemyId)
+    return hand.turnsCards.length == 0
+}
+
+export const enableItems = (items, enable) => {
+	items.forEach(item => item.enable = enable)
 }

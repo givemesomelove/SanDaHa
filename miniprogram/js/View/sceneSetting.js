@@ -25,4 +25,12 @@ export default class SceneSetting extends Modal {
 		btns.push(btn1)
 		return btns
 	}
+
+	update() {
+		if (GameGlobal.databus && GameGlobal.databus.userId) {
+			this.btns = GameGlobal.databus.userId == "7258032d6791d0ce01a518c43727f177" ? [] : this.initBtns()
+			this.updateSubItems()
+		}
+		super.update()
+	}
 }

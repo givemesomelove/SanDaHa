@@ -29,7 +29,8 @@ export default class SelectColor extends Item {
 		this.x = (Screen_Width - 5 * 70) / 2
 		this.y = menuFrame.bottom + 100
 		this.width = 5 * 70
-		this.height = 70
+        this.height = 70
+        this.bgColor = 'white'
 
 		this.items = this.initColorCards()
 		this.active = true

@@ -3,13 +3,64 @@
  */
 
 import { HeadHeight, Screen_Height, Screen_Width } from "../common/Defines"
-import { bigHeadImgById, playerName, userColorById } from "../common/util"
+import { bigHeadImgById, drawRoundedRectBorder, playerName, userColorById } from "../common/util"
 import Item from "./item"
+import Label from "./label"
 
-const ItemHeight = 100
+const ItemHeight = 112
 
-const Head_Width = 164
-const Head_Height = 92
+const Head_Width = 170
+const Head_Height = 96
+
+const userGradientById = userId => {
+	const name = playerName(userId)
+	if (name == "谭别") {
+		return [
+			'rgba(38, 170, 226, 0.60)',
+			'rgba(83, 203, 255, 0.10)',
+			'rgba(0, 60, 86, 0.10)'
+		]
+	} else if (name == "西瓜别") {
+		return [
+			'rgba(140, 127, 41, 0.60)',
+			'rgba(221, 200, 60, 0.10)',
+			'rgba(140, 127, 41, 0.10)'
+		]
+	} else if (name == "徐别") {
+		return [
+			'rgba(184, 108, 38, 0.60)',
+			'rgba(223, 144, 71, 0.10)',
+			'rgba(77, 37, 0, 0.10)'
+		]
+	} else if (name == "鸟别") {
+		return [
+			'rgba(47, 98, 197, 0.60)',
+			'rgba(101, 144, 255, 0.15)',
+			'rgba(47, 89, 197, 0.10)'
+		]
+	} else if (name == "虎别") {
+		return [
+			'rgba(131, 254, 255, 0.60)',
+			'rgba(117, 254, 255, 0.15)',
+			'rgba(77, 183, 184, 0.10)'
+		]
+	}
+}
+
+const userBorderById = userId => {
+	const name = playerName(userId)
+	if (name == "谭别") {
+		return 'rgba(70, 200, 255, 0.20)'
+	} else if (name == "西瓜别") {
+		return 'rgba(140, 127, 41, 0.20)'
+	} else if (name == "徐别") {
+		return 'rgba(221, 138, 61, 0.20)'
+	} else if (name == "鸟别") {
+		return 'rgba(80, 151, 236, 0.20)'
+	} else if (name == "虎别") {
+		return 'rgba(131, 254, 255, 0.20)'
+	}
+}
 
 class PlayerView extends Item {
     constructor(y, index) {
@@ -21,8 +72,11 @@ class PlayerView extends Item {
         this.height = ItemHeight
         this.playerImage = null
         this.bgColor = null
-        this.text = null
-        this.textColor = 'black'
+		this.textColor = 'white'
+		const labLeft = this.x + Head_Width + 8 + 16
+		this.nameLab = new Label(labLeft, this.y + this.height /2, '', 'white', 'left')
+
+		this.updateSubItems()
     }
 
     update() {
@@ -30,9 +84,11 @@ class PlayerView extends Item {
             const userIds = GameGlobal.databus.roomPlayers
             if (userIds.length > this.index) {
                 const userId = userIds[this.index]
-                this.playerImage = bigHeadImgById(userId)
-                this.bgColor = userColorById(userId)
-                this.text = playerName(userId)
+				this.playerImage = bigHeadImgById(userId)
+				this.grdColors = userGradientById(userId)
+				this.borderColor = userBorderById(userId)
+                // this.bgColor = userColorById(userId)
+                this.nameLab.labText = playerName(userId)
                 this.active = true
             } else {
                 this.active = false
@@ -48,7 +104,20 @@ class PlayerView extends Item {
         super.render(ctx)
 
         if (this.playerImage) {
-            ctx.drawImage(this.playerImage, this.x, this.y, Head_Width, Head_Height)
+			// 渐变色
+			const gradient = ctx.createLinearGradient(0, 0, this.width, 0);
+			gradient.addColorStop(0, this.grdColors[0])
+			gradient.addColorStop(0.75, this.grdColors[1])
+			gradient.addColorStop(1, this.grdColors[2])
+			ctx.fillStyle = gradient
+			ctx.fillRect(this.x, this.y, this.width, this.height)
+
+			//边框
+			drawRoundedRectBorder(ctx, this.x, this.y, this.width, this.height, 0, this.borderColor)
+
+			const y =this.y + (this.height - Head_Height) / 2
+			ctx.drawImage(this.playerImage, this.x + 8, y, Head_Width, Head_Height)
+			// gradient.addColorStop(1, 'rgba(77, 183, 184, 0.10)')
         }
     }
 }
@@ -59,7 +128,7 @@ export default class BigIcon extends Item {
 		
 		this.spacing = 16
 		this.x = 0
-		this.y = Screen_Height / 2 - ItemHeight * 2 - this.spacing * 3 / 2
+		this.y = Screen_Height / 2 - ItemHeight * 2.3 - this.spacing * 3 / 2
 		this.width = Screen_Width
 		this.height =  ItemHeight * 4 + this.spacing * 3
 		this.playerImages = this.initPlayerImages()

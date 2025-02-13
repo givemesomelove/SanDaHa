@@ -20,5 +20,9 @@ export default class SetBtn extends Item {
         this.image = imgName ? makeImage(imgName) : null
         this.active = true
         this.enable = true
-    }
+	}
+	
+	configRight = () => {
+		this.x = menuFrame.left - 8 - itemWidth
+	}
 }

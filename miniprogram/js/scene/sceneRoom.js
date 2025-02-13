@@ -5,18 +5,20 @@ import Button from "../View/Button";
 import Scene from "../View/scene";
 
 import { cloud_createRoom, cloud_deleteGame, cloud_deleteRoom, cloud_joinRoom, cloud_outRoom, cloud_randPlayers, cloud_startGame } from "../control/cloudFunc"
+import ReadyBtn from "../View/readyBtn";
 
 export default class SceneRoom extends Scene {
     constructor() {
         super()
 
-        this.image = makeImage("sceneBg_2")
         this.step = GameStep.Ready
 
         this.icons = new BigIcon()
         this.btns = null
 
-        this.stepLab.text = GameStep.Ready
+		this.stepLab.text = GameStep.Ready
+		
+		this.readBtn = new ReadyBtn()
 
         this.updateSubItems()
     }
@@ -50,22 +52,6 @@ export default class SceneRoom extends Scene {
     handleOfLogin(userId) {
         showLoading(1)
         GameGlobal.databus.updateLogin(userId)
-    }
-
-    // 准备按钮(普通)
-    initRoomBtns() {
-        const userId = GameGlobal.databus.userId
-        const online = getUserOnline(userId)
-
-        const x = this.width - Btn_Width - 32
-        const y = this.height - Btn_Height - 100
-        if (online) {
-            const btn = new Button(x, y, "取消准备", this.handleOfOutRoom.bind(this))
-            return [btn]
-        } else {
-            const btn = new Button(x, y, "准备", this.handleOfJoinRoom.bind(this))
-            return [btn]
-        }
     }
 
     // 准备按钮(管理员)
@@ -196,7 +182,7 @@ export default class SceneRoom extends Scene {
             // 当前没有登陆，就直接登陆
             this.handleOfLogin(localId)
         } else if (everLogin && isLogin && !isGM) {
-            this.btns = this.initRoomBtns()
+            this.btns = []
         } else if (everLogin && isLogin && isGM) {
             this.btns = this.initGMBtns()
         }

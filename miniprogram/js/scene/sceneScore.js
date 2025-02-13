@@ -11,7 +11,6 @@ export default class SceneScore extends Scene {
 	constructor() {
 		super()
 		this.step = GameStep.CallScore
-		this.image = makeImage("sceneBg_1")
 		
 		this.stepLab.text = GameStep.CallScore
 		this.handCards = new HandCards({})

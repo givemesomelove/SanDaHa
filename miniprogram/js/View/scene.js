@@ -3,7 +3,7 @@
  */
 
 import { menuFrame, Screen_Height, Screen_Width } from "../common/Defines";
-import { curColorImage, getCurStep, getScoreStr, makeImage } from "../common/util";
+import { curColorImage, enableItems, getCurStep, getScoreStr, isBeforePickCard, isEnemyMy, makeImage, tipToast } from "../common/util";
 import Item from "./item";
 import Label from "./label";
 import ModalBg from "./sceneSetting";
@@ -16,20 +16,23 @@ export default class Scene extends Item {
         this.y = 0
         this.width = Screen_Width
         this.height = Screen_Height
-        this.enable = true
+		this.enable = true
+		this.image = makeImage("sceneBg_2")
         // 添加点击事件
         this.initEvent()
 
         this.step = null
         this.bgImage = null
 
-        this.stepLab = new Label(this.width / 2, (menuFrame.top + menuFrame.bottom) / 2, "", 'black')
+        this.stepLab = new Label(this.width / 2, (menuFrame.top + menuFrame.bottom) / 2, "", 'white')
         this.SetBtn = new SetBtn(0, this.handleOfClickSetting, 'settings')
 		this.historyBtn = new SetBtn(1, this.handleOfClickHistory, 'history')
-		this.mainColorBtn = new SetBtn(2, null, null)
+		this.mainColorBtn = new SetBtn(2, this.handleOfClickMainColor, null)
+		this.watchBtn = new SetBtn(3, this.handleOfClickWatch, 'watch')
+		this.watchBtn.configRight()
 
 		const x = 16 + 4 * 25 + 8
-		this.scoreLab = new Label(x, (menuFrame.top + menuFrame.bottom) / 2, "", 'black')
+		this.scoreLab = new Label(x, (menuFrame.top + menuFrame.bottom) / 2, "", 'white')
     }
 
     handleOfModalBgDismiss = () => {
@@ -44,6 +47,32 @@ export default class Scene extends Item {
     handleOfClickHistory = () => {
         GameGlobal.historyPage.setActive(this.handleOfModalBgDismiss)
         this.enable = false
+    }
+
+    handleOfClickMainColor = () => {
+        // 庄家才能修改
+        if (!isEnemyMy()) return
+        // 出牌前可以修改
+        if (!isBeforePickCard()) return
+
+        GameGlobal.colorPage.setActive(this.handleOfModalBgDismiss)
+        this.enable = false
+	}
+	
+	handleOfClickWatch = () => {
+		const success = GameGlobal.databus.startWatchMode()
+		if (!success) {
+			tipToast("无法观战")
+			return
+		}
+
+		GameGlobal.watchPage.setActive(this.handleOfWatchBgDismiss)
+        enableItems(GameGlobal.pages, false)
+	}
+
+	handleOfWatchBgDismiss = () => {
+		GameGlobal.databus.exitWatchMode()
+        enableItems(GameGlobal.pages, true)
     }
 
     update() {

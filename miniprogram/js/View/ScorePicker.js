@@ -3,7 +3,7 @@
 */
 
 import { Btn_Height, Btn_M_Height, Btn_M_Wdith, Btn_Width, HeadHeight, menuFrame, Screen_Width } from "../common/Defines";
-import { bigHeadImgById, curMaxCallScore, headImageBySeat, isFocuseMy, isUserCallScore, makeImage, headImageById } from "../common/util";
+import { bigHeadImgById, curMaxCallScore, headImageBySeat, isFocuseMy, isUserCallScore, makeImage, headImageById, getMyHandCard, cardSplits, getEverMainCards, tipToast } from "../common/util";
 import { cloud_callScore } from "../control/cloudFunc";
 import Button from "./Button";
 import Item from "./item";
@@ -64,7 +64,8 @@ class Score extends Item {
         this.y = y + Math.floor(index / 4) * this.width
         this.image = makeImage("score1")
         this.text = `${this.num}`
-        this.textColor = 'white'
+		this.textColor = 'white'
+		this.font = 32
         this.active = true
         this.enable = true
         this.playerIcon = null
@@ -124,13 +125,13 @@ export default class ScorePicker extends Item {
         this.x = 0
         this.y = menuFrame.bottom + 16
         this.width = Screen_Width
-        this.height = Head_Height + 8 + Item_Width * 4 + Btn_M_Height
+        this.height = Head_Height + 8 + Item_Width * 4 + 16 + Btn_Height
 
         this.headImgs = this.initHeadImage()
         this.scoreBtns = this.initScoreBtn()
-        this.stopBtn = new MiniButton(
-            Screen_Width / 2 - Btn_M_Wdith / 2,
-            this.y + this.height - Btn_M_Height,
+        this.stopBtn = new Button(
+            Screen_Width / 2 - Btn_Width / 2,
+            this.y + this.height - Btn_Height,
             "不要了",
             this.handleOfClickStop.bind(this)
         )
@@ -169,7 +170,24 @@ export default class ScorePicker extends Item {
     handleOfClickStop() {
         if (!isFocuseMy()) return
 
-        const userId = GameGlobal.databus.userId
+		if (!this.checkIfMustCall55()) {
+			tipToast("想跑？必须喊！")
+			return
+		}
+
+		const userId = GameGlobal.databus.userId
 		cloud_callScore(userId, 0)
+	}
+
+	// 7激动必须喊55分的逻辑
+	checkIfMustCall55 = () => {
+		const cur = curMaxCallScore()
+		if (cur && cur[0] <= 55) return true
+
+		const myHandCard = getMyHandCard()
+		const everMainCards = getEverMainCards(myHandCard)
+		if (everMainCards.length < 7) return true
+
+		return false
 	}
 }

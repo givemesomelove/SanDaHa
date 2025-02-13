@@ -28,12 +28,14 @@ export default class Modal extends Item {
 	}
 
 	handleOfClickBg = () => {
-        this.active = false
+		this.active = false
+		this.enable = false
         if (this.dismissBlock) this.dismissBlock()
     }
 
     setActive(dismissBlock) {
 		this.active = true
+		this.enable = true
 		this.dismissBlock = dismissBlock
 	}
 }
