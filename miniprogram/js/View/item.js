@@ -4,7 +4,7 @@
             标题、背景色
 */
 
-import { clickItems, drawRoundedRectBorder, drawRoundRect, isPointInFrame, renderItems, updateItems } from "../common/util"
+import { clickItems, drawRoundedRectBorder, drawRoundRect, isPointInFrame, makeImage, renderItems, updateItems } from "../common/util"
 
 export default class Item {
     constructor() {
@@ -18,7 +18,8 @@ export default class Item {
         this.enable = false
         // 是否展示边框
         this.showBorder = false
-        this.borderColor = 'red'
+		this.borderColor = 'red'
+		this.selectImage = makeImage("select")
         // 是否展示蒙层
         this.showMask = false
         this.maskColor = 'rgba(0, 0, 0, 0.5)'
@@ -106,8 +107,9 @@ export default class Item {
         }
 
         // 画边框
-        if (this.showBorder) {
-            drawRoundedRectBorder(ctx, this.x, this.y, this.width, this.height, 0, this.borderColor)
+        if (this.showBorder && this.selectImage) {
+			ctx.drawImage(this.selectImage, this.x, this.y, this.width, this.height)
+            // drawRoundedRectBorder(ctx, this.x, this.y, this.width, this.height, 0, this.borderColor)
         }
 
         // 加载所有子元素

@@ -67,10 +67,10 @@ export default class PlayerResult extends Item {
 
 		this.enemyIcon && ctx.drawImage(
 			this.enemyIcon,
-			32 + 85 - 30,
-			this.y + 8 + 48 - 30,
-			30,
-			30
+			32 + 85 - 25,
+			this.y + 8 + 48 - 25,
+			25,
+			25
 		)
 
 		// 98 * 48

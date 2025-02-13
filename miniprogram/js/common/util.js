@@ -51,11 +51,11 @@ export const getUserIdBySeat = seat => {
 	if (!gameInfo) return null
 	const curUserId = GameGlobal.databus.userId
 	let index = gameInfo.turnPlayers.indexOf(curUserId)
-	if (seat == Seat.Left) {
+	if (seat == Seat.Right) {
 		index += 1
 	} else if (seat == Seat.Up) {
 		index += 2
-	} else if (seat == Seat.Right) {
+	} else if (seat == Seat.Left) {
 		index += 3
 	}
 	index %= 4
@@ -728,4 +728,17 @@ export const isSameCards = (cards1, cards2) => {
 		}
 	}
 	return true
+}
+
+export const loginNextUser = () => {
+	const nextPlayer = (playerId, players) => {
+		let index = players.findIndex(item => playerId == item)
+		index = ++index % players.length 
+		return players[index]
+	}
+
+	const players = GameGlobal.databus.gameInfo.turnPlayers
+	const userId = GameGlobal.databus.userId
+	const nextId = nextPlayer(userId, players)
+	GameGlobal.databus.updateLogin(nextId)
 }

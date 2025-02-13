@@ -222,3 +222,13 @@ exports.cloud_nextGame = turnPlayers => {
 		data: data
 	})
 }
+
+exports.cloud_backPickCard = () => {
+	const data = {
+		"type" : 11,
+	}
+	cloudFunc({
+		name: "createGame",
+		data: data
+	})
+}

@@ -48,7 +48,7 @@ export default class DataBus {
         this.userId = userId
         this.updateGameData(this.gameInfo)
         this.loginBlock && this.loginBlock()
-    }
+	}
 
     // 根据主色获取排序策略
     getRanks = mainColor => {

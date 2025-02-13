@@ -134,7 +134,7 @@ export default class SceneEnd extends Scene {
 	getNextGameTurnPlayers = () => {
 		const nextPlayer = (playerId, players) => {
 			let index = players.findIndex(item => playerId == item)
-			index = index == 3 ? 0 : index + 1
+			index = ++index % players.length 
 			return players[index]
 		} 
 

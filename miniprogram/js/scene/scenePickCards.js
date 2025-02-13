@@ -3,7 +3,7 @@
  */
 
 import { BottomCard_Top, Btn_Height, Btn_Width, Card_Height, Card_Width, HandCard_Top, Screen_Width, TurnShow_Bottom } from "../common/Defines";
-import { cardRanks, GameStep, getCurTurnCount, isEnemyMy, isFocuseMy, isMyLastPick, makeImage, PickError, tipToast } from "../common/util";
+import { cardRanks, GameStep, getCurTurnCount, getMyHandCard, getPlayInfoBySeat, isEnemyMy, isFocuseMy, isMyLastPick, makeImage, PickError, Seat, tipToast } from "../common/util";
 import { cloud_pickCard } from "../control/cloudFunc";
 import { checkPickCard, compareWinner } from "../control/pickCardCheck";
 import BottomCards from "../View/bottomCards";
@@ -65,6 +65,11 @@ class BgCard extends Item {
 	 // 确认出牌
 	handleOfClickConfirm() {
 		let cardIds = this.handCard.getSelectCardIds()
+		this.handleOfPickCards(cardIds)
+	}
+
+	handleOfPickCards = items => {
+		let cardIds = items
 		if (cardIds.length == 0) return
 		cardIds = cardRanks(cardIds)
 
@@ -86,11 +91,25 @@ class BgCard extends Item {
         }
 	}
 
+	// 最后一轮出牌，直接出，不用选
+	checkIfLastPick = () => {
+		const game = GameGlobal.databus.gameInfo
+		if (!game) return
+		const leftHand = getPlayInfoBySeat(Seat.Left)
+		const myHand = getMyHandCard()
+		if (leftHand.handCards.length == 0 && myHand.length > 0) {
+			setTimeout(() => this.handleOfPickCards(myHand), 500)
+		} 
+	}
+
 	update() {
         this.stopBtn.active = isFocuseMy()
 		const curTurn = getCurTurnCount()
 		this.stepLab.text = GameStep.PickCard+`(${curTurn})`
 		this.bgCard.active = isEnemyMy()
+
+		this.checkIfLastPick()
+
 		super.update()
 
 	}
