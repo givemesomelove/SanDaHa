@@ -129,6 +129,7 @@ export default class SceneEnd extends Scene {
 	handleOfNextGame = () => {
 		const turnPlayers = this.getNextGameTurnPlayers()
 		cloud_nextGame(turnPlayers)
+		this.nextBtn.active = false
 	}
 
 	getNextGameTurnPlayers = () => {
@@ -157,16 +158,14 @@ export default class SceneEnd extends Scene {
 			return
 		}
 
+		this.nextBtn.active = true
+
 		const endBottom = GameGlobal.databus.gameInfo.bottomEndCards
 		this.endBottomCard.config(endBottom)
 
 		const startBottom = GameGlobal.databus.gameInfo.bottomStartCards
 		this.startBottomCard.config(startBottom)
 
-		this.nextBtn.active = isGMMy()
-
 		super.update()
 	}
-
-
 }

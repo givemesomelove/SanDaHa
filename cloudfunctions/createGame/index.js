@@ -6,7 +6,23 @@ console.log('当前环境是:', cloud.DYNAMIC_CURRENT_ENV)
 cloud.init({
 	env: cloud.DYNAMIC_CURRENT_ENV
 }) // 使用当前云环境
+
 const db = cloud.database();
+
+// 获取所有卡牌列表
+let card_List = null
+const db_getCardList = async () => {
+	if (card_List) {
+		return card_List
+	}
+
+	const cardData = await db.collection('card').get();
+	if (cardData.data && cardData.data.length > 0) {
+		card_List = cardData.data
+		return card_List
+	}
+	return null
+}
 
 // 获取当前进行中的游戏信息
 const db_getCurGame = async () => {
@@ -17,31 +33,59 @@ const db_getCurGame = async () => {
 	return null
 }
 
-// 获取所有卡牌列表
-const db_getCardList = async () => {
-	const cardData = await db.collection('card').get();
-	if (cardData.data && cardData.data.length > 0) {
-		return cardData.data
+// 获取当前积分信息
+const db_getCurScore = async () => {
+	const scores = await db.collection('score').orderBy('stamp', 'desc') // 按 stamp 降序排列（最大的在最前面）
+		.limit(1) // 只取第一条
+		.get()
+	if (scores.data && scores.data.length > 0) {
+		return scores.data[0]
 	}
-	return null
+	return {}
 }
 
-// 记录当前出牌状态，用于回退
-const db_record_pick = async (game) => {
-	const curGame = {}
-	curGame.stamp = Date.now()
-	curGame.curScore = game.curScore
-	curGame.focusPlayer = game.focusPlayer
-	curGame.player1Info = game.player1Info
-	curGame.player2Info = game.player2Info
-	curGame.player3Info = game.player3Info
-	curGame.player4Info = game.player4Info
+const db_cleanScore = async () => {
+	await db.collection('score').where({
+		"_id": db.command.neq("0")
+	}).remove()
+
+	const room = await db_getCurRoom()
+	if (room) {
+		room.sumScore = {}
+		const did = room._id
+		delete room._id
+		db.collection('room').doc(did).update({
+			data: {
+				sumScore: db.command.set({})
+			}
+		});
+	}
+}
+
+// 获取房间信息
+const db_getCurRoom = async () => {
+	const rooms = await db.collection('room').get();
+	if (rooms.data && rooms.data.length > 0) {
+		return rooms.data[0]
+	}
+	return {}
+}
+
+// 记录游戏现状，用于回退
+const db_record_pick = async () => {
+	const game = await db_getCurGame()
+	if (!game) return
+
+	game.gameId = game._id
+	game.stamp = Date.now()
+	delete game._id
 
 	db.collection('pickpath').add({
-		data: curGame
+		data: game
 	});
 }
 
+// 删除游戏记录
 const db_remove_record_pick = async () => {
 	try {
 		await db.collection('pickpath').where({
@@ -52,6 +96,87 @@ const db_remove_record_pick = async () => {
 		console.error(err)
 		return '删除发生了错误'
 	}
+}
+
+// 获取游戏的分数结算结果
+const getCurGameScore = game => {
+	if (game.curScore >= game.targetScore) {
+		/// 庄家输
+		let scale = 1;
+		if (game.targetScore <= 30) {
+			scale = 3
+		} else if (game.targetScore <= 50) {
+			scale = 2
+		}
+		// 垮庄
+		if (game.curScore - game.targetScore >= 70) {
+			scale *= 3
+		}
+		if (game.curScore - game.targetScore < 40) {
+			scale *= 2
+		}
+		const score = {}
+		const enemy = game.enemyPlayer
+		score[enemy] = -scale * 3
+		const players = game.turnPlayers.filter(item => item != enemy)
+		players.forEach(item => {
+			score[item] = scale
+		})
+		return score
+	} else {
+		// 庄家赢
+		let scale = 2
+		if (game.targetScore <= 30) {
+			scale *= 3
+		} else if (game.targetScore <= 50) {
+			scale *= 2
+		}
+		if (game.curScore == 0) {
+			scale *= 3
+		} else if (game.curScore < 30) {
+			scale *= 2
+		}
+		const score = {}
+		const enemy = game.enemyPlayer
+		score[enemy] = scale * 3
+		const players = game.turnPlayers.filter(item => item != enemy)
+		players.forEach(item => {
+			score[item] = -scale
+		})
+		return score
+	}
+}
+
+// 更新分数
+const db_saveScore = async (game) => {
+	const score = await db_getCurScore()
+	const curScore = getCurGameScore(game)
+	for (let id in curScore) {
+		if (score.sumScore.hasOwnProperty(id)) {
+			score.sumScore[id] += curScore[id]
+		} else {
+			score.sumScore[id] = curScore[id]
+		}
+	}
+	const data = {
+		sumScore: score.sumScore,
+		curScore: curScore,
+		stamp: Date.now()
+	}
+	db.collection('score').add({
+		data: data
+	});
+
+	const room = await db_getCurRoom()
+	room.sumScore = score.sumScore
+	const did = room._id
+	delete room._id
+	// 将分数赋值给房间数据表
+	db.collection('room').doc(did).update({
+		data: room
+	});
+
+	return [score.sumScore, curScore]
 }
 
 // 删除上把游戏
@@ -281,6 +406,12 @@ const pickDefeat = async (score) => {
 	curGame.step = 6
 	curGame.bottomEndCards = game.bottomEndCards
 	curGame.mainColor = 5
+
+	game.curScore = score
+	const res = await db_saveScore(game)
+	curGame.sumScore = res[0]
+	curGame.gameScore = res[1]
+
 	await db.collection('game').doc(game._id).update({
 		data: curGame
 	});
@@ -358,16 +489,18 @@ const pick_card = async (cards, userKey, userId, winner, bottomScale) => {
 			player.handCards.splice(index, 1)
 		}
 	})
-	// 修正异常导致同一个玩家一次出两轮牌
-	const tmp = fixTurnsCards(game)
-	if (tmp) {
-		game = tmp
-	}
 
 	if (winner) {
 		game = await select_turn_winner(game, winner, bottomScale)
 	} else {
 		game.focusPlayer = nextPlayer(game.turnPlayers, userId)
+	}
+
+	// 游戏结束
+	if (game.step == 6) {
+		const res = await db_saveScore(game)
+		game.sumScore = res[0]
+		game.gameScore = res[1]
 	}
 
 	db_record_pick(game)
@@ -378,33 +511,6 @@ const pick_card = async (cards, userKey, userId, winner, bottomScale) => {
 	await db.collection('game').doc(did).update({
 		data: game
 	});
-}
-
-// 修正出牌轮次异常
-const fixTurnsCards = game => {
-	const count1 = game.player1Info.turnsCards.length
-	const count2 = game.player2Info.turnsCards.length
-	const count3 = game.player3Info.turnsCards.length
-	const count4 = game.player4Info.turnsCards.length
-	const max = Math.max(count1, count2, count3, count4)
-	const min = Math.min(count1, count2, count3, count4)
-	if (max - min >= 2) {
-		if (max == count1) {
-			game.player1Info.turnsCards.pop()
-		}
-		if (max == count2) {
-			game.player2Info.turnsCards.pop()
-		}
-		if (max == count3) {
-			game.player3Info.turnsCards.pop()
-		}
-		if (max == count4) {
-			game.player4Info.turnsCards.pop()
-		}
-		return game
-	} else {
-		return null
-	}
 }
 
 // 玩家排序修改
@@ -419,11 +525,16 @@ const db_randPlayers = async (players) => {
 	});
 }
 
+// 四个人都点下一局才会跳下一局
+let Count_ReadyForNext = 0
 const startNextGame = async (turnPlayers) => {
-	// 删除当前游戏
-	await deleteGame()
-	// 修改座位 
-	await db_randPlayers(turnPlayers)
+	if (++Count_ReadyForNext >= 4) {
+		Count_ReadyForNext = 0
+		// 删除当前游戏
+		deleteGame()
+		// 修改座位 
+		db_randPlayers(turnPlayers)
+	}
 }
 
 // 回退玩家出牌
@@ -439,18 +550,16 @@ const backPickCard = async () => {
 		if (!game) return '游戏不存在'
 
 		const datas = querySnapshot.data; // 获取第一条记录的完整数据
-		const curGame = {}
-		curGame.curScore = datas[1].curScore
-		curGame.focusPlayer = datas[1].focusPlayer
-		curGame.player1Info = datas[1].player1Info
-		curGame.player2Info = datas[1].player2Info
-		curGame.player3Info = datas[1].player3Info
-		curGame.player4Info = datas[1].player4Info
-		await db.collection('game').doc(game._id).update({
+		const curGame = datas[1]
+		const did = curGame.gameId
+		delete curGame._id
+		delete curGame.stamp
+		delete curGame.gameId
+		db.collection('game').doc(did).update({
 			data: curGame
 		});
 
-		await db.collection('pickpath').where({
+		db.collection('pickpath').where({
 			"_id": datas[0]._id
 		}).remove()
 	}
@@ -463,6 +572,7 @@ exports.main = async (event, context) => {
 	userId = event["userId"];
 	players = event["players"];
 	let msg = ''
+
 	switch (type) {
 		case 1: {
 			msg = await deleteGame();
@@ -519,6 +629,9 @@ exports.main = async (event, context) => {
 		}
 		case 11: {
 			await backPickCard()
+		}
+		case 12: {
+			await db_cleanScore()
 		}
 	}
 	return {

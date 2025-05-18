@@ -12,7 +12,8 @@ export default class DataBus {
 
         this.userId = null;
         // 房间信息
-        this.roomPlayers = [];
+		this.roomPlayers = [];
+		this.sumScore = null
         this.roomStamp = null;
         // 游戏信息
         this.gameInfo = null;
@@ -34,10 +35,12 @@ export default class DataBus {
     updateRoomData = data => {
         if (data && data.players) {
             this.roomPlayers = data.players;
-            this.roomStamp = data.createStamp;
+			this.roomStamp = data.createStamp;
+			this.sumScore = data.sumScore;
         } else {
             this.roomPlayers = null;
-            this.roomStamp = null;
+			this.roomStamp = null;
+			this.sumScore = null;
         }
     }
 

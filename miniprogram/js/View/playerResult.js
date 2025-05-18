@@ -24,7 +24,7 @@ export default class PlayerResult extends Item {
 
 		const left = 32 + 85 + 16
 		this.nameLab = new Label(left, this.y + 20, '', 'white', 'left')
-		this.scoreLab = new Label(left, this.y + 20 + 24, '总积分：0', 'rgba(255, 255, 255, 0.7)', 'left')
+		this.scoreLab = new Label(left, this.y + 20 + 24, '', 'rgba(255, 255, 255, 0.7)', 'left')
 
 		this.winIcon = makeImage("winner")
 		this.curScoreLab = new Label(Screen_Width - 48, this.y + 24 + 12, '+0', 'rgba(B7, B7, B7, 1)')
@@ -47,10 +47,31 @@ export default class PlayerResult extends Item {
 
 		this.nameLab.labText = playerName(playerId)
 
-		this.curScoreLab.labText = isPlayerWin(playerId) ? '+0' : '-0'
+		this.scoreLab.labText = this.getPlayerSumScore(playerId)
+		this.curScoreLab.labText = this.getPlayerCurScore(playerId)
 
 		this.winIcon = isPlayerWin(playerId) ? makeImage('winner') : makeImage("loser")
 		super.update()
+	}
+
+	getPlayerCurScore = userId => {
+		const gameInfo = GameGlobal.databus.gameInfo
+		if (!gameInfo || !gameInfo.gameScore) return ''
+		if (!gameInfo.gameScore.hasOwnProperty(userId)) return ''
+		const score = gameInfo.gameScore[userId]
+		if (score >= 0) {
+			return `+${score}`
+		} else {
+			return `${score}`
+		}
+	}
+
+	getPlayerSumScore = userId => {
+		const gameInfo = GameGlobal.databus.gameInfo
+		if (!gameInfo || !gameInfo.sumScore) return ''
+		if (!gameInfo.sumScore.hasOwnProperty(userId)) return ''
+		const score = gameInfo.sumScore[userId]
+		return `总积分：${score}`
 	}
 
 	render(ctx) {

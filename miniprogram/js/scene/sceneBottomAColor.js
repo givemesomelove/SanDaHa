@@ -10,8 +10,11 @@ import {
 	Screen_Width
 } from "../common/Defines"
 import {
+	bigHeadImgById,
 	cardRanks,
 	GameStep,
+	headImageById,
+	isEnemyMy,
 	isFocuseMy,
 	makeImage,
 	tipToast
@@ -116,18 +119,23 @@ export default class SceneBottomAColor extends Scene {
 
 	update() {
 		if (isFocuseMy()) {
-			this.waitImage = null
             this.confirmBtn.active = true
             this.defeatBtn.active = true
 			this.bottomCard.active = true
             this.colorPicker.active = true
 		} else {
-			this.waitImage = makeImage("selectBottom")
             this.confirmBtn.active = false
             this.defeatBtn.active = false
 			this.bottomCard.active = false
 			this.colorPicker.active = false
 		}
+		if (isEnemyMy() || !GameGlobal.databus.gameInfo) {
+			this.waitImage = null
+		} else {
+			const enemy = GameGlobal.databus.gameInfo.enemyPlayer
+			this.waitImage = bigHeadImgById(enemy)
+		}
+
 		this.updateSubItems()
 
 		super.update()
@@ -140,10 +148,10 @@ export default class SceneBottomAColor extends Scene {
 
 		this.waitImage && ctx.drawImage(
 			this.waitImage,
-			Screen_Width / 2 - 100,
-			Screen_Height / 2 - 200,
-			200,
-			200
+			Screen_Width / 2 - 170 / 2,
+			Screen_Height / 2 - 96,
+			170,
+			96
 		)
 	}
 }

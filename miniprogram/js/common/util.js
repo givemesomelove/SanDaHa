@@ -89,25 +89,6 @@ export const makeImage = name => {
 	return img
 }
 
-// 根据方位获取小头像图片
-export const headImageBySeat = seat => {
-	const userId = getUserIdBySeat(seat)
-	const name = playerName(userId)
-	let imageName = ""
-	if (name == "谭别") {
-		imageName = "tan"
-	} else if (name == "西瓜别") {
-		imageName = "gua"
-	} else if (name == "鸟别") {
-		imageName = "niao"
-	} else if (name == "徐别") {
-		imageName = "xu"
-	} else if (name == "虎别") {
-		imageName = "hu"
-	}
-	return makeImage(imageName)
-}
-
 // 根据id获取小头像图片
 export const headImageById = userId => {
 	const name = playerName(userId)
@@ -124,6 +105,12 @@ export const headImageById = userId => {
 		imageName = "hu"
 	}
 	return makeImage(imageName)
+}
+
+// 根据方位获取小头像图片
+export const headImageBySeat = seat => {
+	const userId = getUserIdBySeat(seat)
+	return headImageById(userId)
 }
 
 export const curColorImage = () => {
@@ -176,22 +163,6 @@ export const playerName = userId => {
 		}
 	}
 	return "未知";
-}
-
-// 根据用户id列表获取用户名字列表
-export const playerNames = userIds => {
-	if (!userIds) return "无";
-	if (!GameGlobal.allPlayers) return "未知";
-
-	let players = "";
-	for (const userId of userIds) {
-		for (const player of GameGlobal.allPlayers) {
-			if (userId == player["_id"]) {
-				players += player["name"] + ","
-			}
-		}
-	}
-	return players.slice(0, -1);
 }
 
 // 根据用户名获取id
@@ -249,19 +220,6 @@ export const getCurStep = () => {
 	return GameStep.Ready
 }
 
-// 获取牌堆激动数
-export const getEverMainCards = cardIds => {
-	const ranks = GameGlobal.databus.ranks
-	const res = []
-	for (const card of cardIds) {
-		const index = ranks.indexOf(card);
-		if (index < 10) {
-			res.push(card)
-		}
-	}
-	return res
-}
-
 // 手牌按颜色分堆
 export const cardSplits = (cards) => {
 	const ranks = GameGlobal.databus.ranks
@@ -315,30 +273,6 @@ export const cardRanks = cardIds => {
 	return results
 }
 
-// 卡牌列表是否相同
-export const isCardsUpdate = (cardIds1, cardIds2) => {
-	if (!cardIds1 && !cardIds2) return false
-	if (!cardIds1 && cardIds2) return true
-	if (cardIds1 && !cardIds2) return true
-	if (cardIds1.length != cardIds2.length) return true
-
-	for (let i = 0; i < cardIds1.length; i++) {
-		if (cardIds1[i] != cardIds2[i]) {
-			return true
-		}
-	}
-	return false
-}
-
-// 回收整个数组的复用池(元素必须要有remove方法)
-export const removeItems = items => {
-	if (!items || items.length == 0) return
-
-	items.forEach(item => {
-		item && item.remove()
-	})
-}
-
 // 渲染整个数组的元素（元素必须要有render方法）
 export const renderItems = (items, ctx) => {
 	if (!items || items.length == 0) return
@@ -385,7 +319,7 @@ export const isGMMy = () => {
 	if (!GameGlobal.databus.userId) return false
 
 	const userName = playerName(GameGlobal.databus.userId)
-	return userName == "虎别" || userName == '西瓜别'
+	return userName == "虎别"
 }
 
 // 玩家是庄家吗
@@ -405,21 +339,6 @@ export const isPlayerWin = userId => {
 	if (isEnemy && enmeyWin) return true
 	if (!isEnemy && !enmeyWin) return true
 	return false
-}
-
-// 获取主色编号对应字符串
-export const colorName = (color) => {
-	switch (color) {
-		case 1:
-			return "红桃"
-		case 2:
-			return "黑桃"
-		case 3:
-			return "梅花"
-		case 4:
-			return "方片"
-	}
-	return ""
 }
 
 // 获取当前在线玩家状态
@@ -458,16 +377,6 @@ export const tipToast = (text) => {
 		icon: 'error',
 		mask: true
 	})
-}
-
-// 打乱玩家座位
-export const randomPlayers = (array) => {
-	const newArray = [...array]; // 创建副本
-	for (let i = newArray.length - 1; i > 0; i--) {
-		const j = Math.floor(Math.random() * (i + 1));
-		[newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-	}
-	return newArray;
 }
 
 // 点是否在Rect中
@@ -692,26 +601,6 @@ export const getCurTurnCount = () => {
 	return count
 }
 
-// 获取当前分数的几/几
-export const getScoreStr = () => {
-	const gameInfo = GameGlobal.databus.gameInfo
-	if (!gameInfo) return ""
-
-	const target = gameInfo.targetScore
-	if (!target) return ""
-	const cur = gameInfo.curScore
-	return `${cur}/${target}`
-}
-
-export const isBeforePickCard = () => {
-    const game = GameGlobal.databus.gameInfo
-    if (!game) return false
-
-    const enemyId = game.enemyPlayer
-    const hand = getPlayInfoById(enemyId)
-    return hand.turnsCards.length == 0
-}
-
 export const enableItems = (items, enable) => {
 	items.forEach(item => item.enable = enable)
 }
@@ -730,15 +619,7 @@ export const isSameCards = (cards1, cards2) => {
 	return true
 }
 
-export const loginNextUser = () => {
-	const nextPlayer = (playerId, players) => {
-		let index = players.findIndex(item => playerId == item)
-		index = ++index % players.length 
-		return players[index]
-	}
-
-	const players = GameGlobal.databus.gameInfo.turnPlayers
-	const userId = GameGlobal.databus.userId
-	const nextId = nextPlayer(userId, players)
-	GameGlobal.databus.updateLogin(nextId)
+export const isDevEnv = () => {
+	const dev = wx.getDeviceInfo()
+	return dev.platform == 'devtools'
 }

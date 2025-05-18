@@ -232,3 +232,13 @@ exports.cloud_backPickCard = () => {
 		data: data
 	})
 }
+
+exports.cloud_cleanScore = () => {
+	const data = {
+		'type' : 12
+	}
+	cloudFunc({
+		name: 'createGame',
+		data: data
+	})
+}

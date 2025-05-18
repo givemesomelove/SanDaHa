@@ -75,9 +75,18 @@ class PlayerView extends Item {
 		this.textColor = 'white'
 		const labLeft = this.x + Head_Width + 8 + 16
 		this.nameLab = new Label(labLeft, this.y + this.height /2, '', 'white', 'left')
+		this.scoreLab = new Label(Screen_Width - 16 - 100, this.y + this.height / 2, '', 'white', 'left')
 
 		this.updateSubItems()
-    }
+	}
+	
+	getPlayerSumScore = userId => {
+		const sumScore = GameGlobal.databus.sumScore
+		if (!sumScore) return ''
+		if (!sumScore.hasOwnProperty(userId)) return '无'
+		const score = sumScore[userId]
+		return `总积分：${score}`
+	}
 
     update() {
         if (GameGlobal.databus.roomStamp && GameGlobal.databus.roomPlayers) {
@@ -87,8 +96,8 @@ class PlayerView extends Item {
 				this.playerImage = bigHeadImgById(userId)
 				this.grdColors = userGradientById(userId)
 				this.borderColor = userBorderById(userId)
-                // this.bgColor = userColorById(userId)
-                this.nameLab.labText = playerName(userId)
+				this.nameLab.labText = playerName(userId)
+				this.scoreLab.labText = this.getPlayerSumScore(userId)
                 this.active = true
             } else {
                 this.active = false
